@@ -1,0 +1,17 @@
+penDen-app/
+│
+├── backend/                     # Django
+│   ├── ecommerce/               # Django project config
+│   ├── accounts/                # login, register, profile
+│   ├── products/                # product logic, categories, etc.
+│   ├── cart/                    # add/remove/update cart
+│   ├── orders/                  # checkout, shipping, payments
+│   └── manage.py
+│
+└── frontend/                    # React
+    ├── src/
+    │   ├── api/                 # Axios services
+    │   ├── pages/               # Home, Product, Order, Account
+    │   ├── components/          # Reusable components
+    │   ├── App.jsx
+    │   └── index.jsx
