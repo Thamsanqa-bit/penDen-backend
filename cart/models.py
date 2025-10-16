@@ -4,8 +4,11 @@ from accounts.models import UserProfile
 
 # Create your models here.
 class Cart(models.Model):
-    user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
+    user = models.OneToOneField(UserProfile, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "cart"
 
     def __str__(self):
         return f" Cart {self.user}"
@@ -18,5 +21,9 @@ class CartItem(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     quantity = models.PositiveIntegerField(default=1)
 
+    class Meta:
+        db_table = "cart_item"
+
     def total_price(self):
         return self.product.price * self.quantity
+
