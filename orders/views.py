@@ -5,42 +5,75 @@ from rest_framework import status
 from .models import Order, OrderItem
 from products.models import Product  # adjust path if needed
 from .serializers import OrderSerializer
+from cart.models import Cart
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def checkout(request):
-    cart = request.data.get("cart", {})
+    user = request.user
+    address = request.data.get('address', '')
 
-    if not cart or not isinstance(cart, dict):
-        return Response({"error": "Invalid or empty cart."}, status=status.HTTP_400_BAD_REQUEST)
+    cart = Cart.objects.filter(user=user).first()
+    if not cart or not cart.items.exists():
+        return Response({'error': 'Your cart is empty.'}, status=status.HTTP_400_BAD_REQUEST)
 
-    try:
-        total_amount = 0
-        order = Order.objects.create(user=request.user)
+    # Calculate total
+    total_amount = sum(item.product.price * item.quantity for item in cart.items.all())
 
-        for product_id, quantity in cart.items():
-            product = Product.objects.get(id=product_id)
-            subtotal = product.price * quantity
-            total_amount += subtotal
+    # Create order
+    order = Order.objects.create(
+        user=user,
+        total_amount=total_amount,
+        address=address
+    )
 
-            OrderItem.objects.create(
-                order=order,
-                product=product,
-                quantity=quantity,
-                subtotal=subtotal
-            )
+    # Create order items
+    for item in cart.items.all():
+        OrderItem.objects.create(
+            order=order,
+            product=item.product,
+            quantity=item.quantity,
+            price=item.product.price
+        )
 
-        order.total_amount = total_amount
-        order.save()
+    # Clear cart
+    cart.items.all().delete()
 
-        serializer = OrderSerializer(order)
-        return Response({"message": "Order placed successfully!", "order": serializer.data}, status=status.HTTP_201_CREATED)
-
-    except Product.DoesNotExist:
-        return Response({"error": "One or more products not found."}, status=status.HTTP_404_NOT_FOUND)
-    except Exception as e:
-        print("Checkout error:", str(e))
-        return Response({"error": "Something went wrong during checkout."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    serializer = OrderSerializer(order)
+    return Response(serializer.data, status=status.HTTP_201_CREATED)
+# def checkout(request):
+#     cart = request.data.get("cart", {})
+#
+#     if not cart or not isinstance(cart, dict):
+#         return Response({"error": "Invalid or empty cart."}, status=status.HTTP_400_BAD_REQUEST)
+#
+#     try:
+#         total_amount = 0
+#         order = Order.objects.create(user=request.user)
+#
+#         for product_id, quantity in cart.items():
+#             product = Product.objects.get(id=product_id)
+#             subtotal = product.price * quantity
+#             total_amount += subtotal
+#
+#             OrderItem.objects.create(
+#                 order=order,
+#                 product=product,
+#                 quantity=quantity,
+#                 subtotal=subtotal
+#             )
+#
+#         order.total_amount = total_amount
+#         order.save()
+#
+#         serializer = OrderSerializer(order)
+#         return Response({"message": "Order placed successfully!", "order": serializer.data}, status=status.HTTP_201_CREATED)
+#
+#     except Product.DoesNotExist:
+#         return Response({"error": "One or more products not found."}, status=status.HTTP_404_NOT_FOUND)
+#     except Exception as e:
+#         print("Checkout error:", str(e))
+#         return Response({"error": "Something went wrong during checkout."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 # from django.shortcuts import render
