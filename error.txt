@@ -1,0 +1,8 @@
+# Fake the migration to zero (mark as removed without actually dropping tables)
+python manage.py migrate orders zero --fake
+
+# Then create new migrations
+python manage.py makemigrations orders
+
+# Apply the new migrations
+python manage.py migrate orders

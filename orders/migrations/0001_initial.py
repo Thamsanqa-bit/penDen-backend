@@ -8,11 +8,14 @@ class Migration(migrations.Migration):
 
     initial = True
 
-    dependencies = []
+    dependencies = [
+        ("accounts", "0001_initial"),
+        ("products", "0001_initial"),
+    ]
 
     operations = [
         migrations.CreateModel(
-            name="Category",
+            name="Order",
             fields=[
                 (
                     "id",
@@ -23,14 +26,26 @@ class Migration(migrations.Migration):
                         verbose_name="ID",
                     ),
                 ),
-                ("name", models.CharField(max_length=100)),
+                (
+                    "total_amount",
+                    models.DecimalField(decimal_places=2, default=0.0, max_digits=10),
+                ),
+                ("address", models.TextField(blank=True)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "user",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="accounts.userprofile",
+                    ),
+                ),
             ],
             options={
-                "db_table": "categories",
+                "db_table": "orders",
             },
         ),
         migrations.CreateModel(
-            name="Product",
+            name="OrderItem",
             fields=[
                 (
                     "id",
@@ -41,20 +56,26 @@ class Migration(migrations.Migration):
                         verbose_name="ID",
                     ),
                 ),
-                ("name", models.CharField(max_length=100)),
+                ("quantity", models.PositiveIntegerField(default=1)),
                 ("price", models.DecimalField(decimal_places=2, max_digits=10)),
-                ("featured", models.BooleanField(default=False)),
-                ("image", models.ImageField(upload_to="")),
                 (
-                    "category",
+                    "order",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
-                        to="products.category",
+                        related_name="items",
+                        to="orders.order",
+                    ),
+                ),
+                (
+                    "product",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="products.product",
                     ),
                 ),
             ],
             options={
-                "db_table": "products",
+                "db_table": "order_items",
             },
         ),
     ]

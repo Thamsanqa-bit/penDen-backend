@@ -3,26 +3,35 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 from .models import Order, OrderItem
-from products.models import Product  # adjust path if needed
+from products.models import Product
 from .serializers import OrderSerializer
 from cart.models import Cart
+from django.views.decorators.cache import cache_page
+
+@cache_page(60 * 15)  # cache for 15 minutes
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def checkout(request):
-    user = request.user
+    user = request.user.userprofile  # Use User instance, not UserProfile
     address = request.data.get('address', '')
 
-    cart = Cart.objects.filter(user=user).first()
+    # Get the cart using UserProfile (for cart) but User for order
+    try:
+        user_profile = request.user.userprofile
+        cart = Cart.objects.filter(user=user_profile).first()
+    except UserProfile.DoesNotExist:
+        return Response({'error': 'User profile not found'}, status=status.HTTP_404_NOT_FOUND)
+
     if not cart or not cart.items.exists():
         return Response({'error': 'Your cart is empty.'}, status=status.HTTP_400_BAD_REQUEST)
 
     # Calculate total
     total_amount = sum(item.product.price * item.quantity for item in cart.items.all())
 
-    # Create order
+    # Create order - use User instance here
     order = Order.objects.create(
-        user=user,
+        user=user,  # This should be the Django User instance
         total_amount=total_amount,
         address=address
     )
@@ -41,6 +50,42 @@ def checkout(request):
 
     serializer = OrderSerializer(order)
     return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+# @api_view(["POST"])
+# @permission_classes([IsAuthenticated])
+# def checkout(request):
+#     user = request.user.userprofile
+#     address = request.data.get('address', '')
+#
+#     cart = Cart.objects.filter(user=user).first()
+#     if not cart or not cart.items.exists():
+#         return Response({'error': 'Your cart is empty.'}, status=status.HTTP_400_BAD_REQUEST)
+#
+#     # Calculate total
+#     total_amount = sum(item.product.price * item.quantity for item in cart.items.all())
+#
+#     # Create order
+#     order = Order.objects.create(
+#         user=user,
+#         total_amount=total_amount,
+#         address=address
+#     )
+#
+#     # Create order items
+#     for item in cart.items.all():
+#         OrderItem.objects.create(
+#             order=order,
+#             product=item.product,
+#             quantity=item.quantity,
+#             price=item.product.price
+#         )
+#
+#     # Clear cart
+#     cart.items.all().delete()
+#
+#     serializer = OrderSerializer(order)
+#     return Response(serializer.data, status=status.HTTP_201_CREATED)
+
 # def checkout(request):
 #     cart = request.data.get("cart", {})
 #
