@@ -8,11 +8,11 @@ from .serializers import CartSerializer
 from accounts.models import UserProfile
 from django.views.decorators.cache import cache_page
 
-@cache_page(60 * 15)  # cache for 15 minutes
+#@cache_page(60 * 15)  # cache for 15 minutes
 # Create your views here.
 @api_view(['GET'])
 def get_cart(request):
-    cart = Cart.objects.filter(user=request.user).first()
+    cart = Cart.objects.filter(user=request.user.userprofile).first()
     if not cart:
         return Response({'items': [], 'total_price': 0})
     serializer = CartSerializer(cart)

@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     "footer",
     "orders",
     "about",
+    "payment",
     "rest_framework",
     "corsheaders",
     "cart",
