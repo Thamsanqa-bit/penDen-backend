@@ -14,7 +14,8 @@ from django.views.decorators.cache import cache_page
 @permission_classes([IsAuthenticated])
 def checkout(request):
     user = request.user.userprofile  # Use User instance, not UserProfile
-    address = request.data.get('address', '')
+    # address = request.data.get('address', '')
+    address = user.address
 
     # Get the cart using UserProfile (for cart) but User for order
     try:
