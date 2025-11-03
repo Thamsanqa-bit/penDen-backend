@@ -1,3 +1,15 @@
 asgiref==3.10.0
 Django==5.2.7
 sqlparse==0.5.3
+djangorestframework
+django-redis
+django-health-check
+django-ratelimit
+drf-standardized-errors
+celery[redis]
+tenacity
+pybreaker
+sentry-sdk
+requests
+python-dotenv
+

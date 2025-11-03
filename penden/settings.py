@@ -37,21 +37,34 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    #local apps
+
     "accounts",
     "products",
     "footer",
     "orders",
     "about",
     "payment",
+    "cart",
+
+    #third party
+
     "rest_framework",
     "corsheaders",
-    "cart",
     "rest_framework.authtoken",
+    "django_redis",
+    "django_ratelimit",
+    "health_check",
+    "health_check.db",
+    "health_check.cache",
+    "health_check.storage",
+    "drf_standardized_errors",
     # "cacheops",
 
 ]
 
 REST_FRAMEWORK = {
+    "EXCEPTION_HANDLER": "drf_standardized_errors.handler.exception_handler",
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication',
     ],
@@ -97,7 +110,10 @@ WSGI_APPLICATION = "penden.wsgi.application"
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 import os
 from dotenv import load_dotenv
+from celery.schedules import crontab
+
 load_dotenv()
+
 
 DATABASES = {
     "default": {
@@ -110,6 +126,7 @@ DATABASES = {
     }
 }
 
+#redis cache
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
@@ -120,6 +137,24 @@ CACHES = {
         }
     }
 }
+
+# Celery
+CELERY_BROKER_URL = "redis://127.0.0.1:6379/0"
+CELERY_RESULT_BACKEND = "redis://127.0.0.1:6379/0"
+CELERY_BEAT_SCHEDULE = {
+    "retry_failed_orders": {
+        "task": "orders.tasks.retry_failed_orders",
+        "schedule": crontab(minute="*/5"),
+    }
+}
+
+# Sentry for error tracking
+import sentry_sdk
+sentry_sdk.init(
+    dsn=os.getenv("SENTRY_DSN", ""),
+    traces_sample_rate=1.0,
+    send_default_pii=True,
+)
 
 SESSION_ENGINE = "django.contrib.sessions.backends.cache"
 SESSION_CACHE_ALIAS = "default"
@@ -180,5 +215,21 @@ PASSWORD_HASHERS = [
     'django.contrib.auth.hashers.BCryptPasswordHasher',
     'django.contrib.auth.hashers.PBKDF2PasswordHasher',  # fallback
     'django.contrib.auth.hashers.PBKDF2SHA1PasswordHasher',
+]
+
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'  # For production
+# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # For development
+
+EMAIL_HOST = 'smtp.gmail.com'  # Or your email provider
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'thamsanqambodla@gmail.com'
+EMAIL_HOST_PASSWORD = 'Neoentle@290822'
+DEFAULT_FROM_EMAIL = 'your-store@example.com'
+
+# Admin notifications
+ADMINS = [
+    ('Admin Name', 'admin@example.com'),
 ]
 

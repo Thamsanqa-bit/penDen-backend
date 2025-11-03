@@ -15,3 +15,44 @@ penDen-app/
     │   ├── components/          # Reusable components
     │   ├── App.jsx
     │   └── index.jsx
+
+# I need to add a session storage
+# I get to add footer
+#I need to redirect links
+# I need to improve api's performance DONE
+# I need to add a payment method
+# I need to dockerize this app
+# make app resilience and fault tolerance DONE
+#add signal for orders
+#make it mobile friendly
+
+for API resilence and Fault tolerance
+1. tenacity -> Automatic Retries and Circuit Breakers for External APIs
+2. pybreaker -> Stop calling a failing API temporarily to prevent a cascade of failures
+3. Celery with Redis -> You never want your API to hang while sending emails, generating invoices, or confirming payments
+4. drf-exceptions-hog or drf-standardized-errors -> Gracefully error handling for DRF
+5. django-redis -> Purpose: Reduce DB pressure and use cached data when DB is slow.
+6. django-ratelimit -> Prevent abuse (too many requests from same user/IP) which can crash your backend
+7. django-health-check -> Adds /health/ endpoint to verify DB, cache, Celery, storage, etc.
+8. sentry-sdk -> Log exceptions and performance issues to Sentry (with request context and stack trace)
+9. django-db-geventpool -> Adds DB connection pooling for better resilience under load
+10. timeouts with requests or httpx -> Without timeouts, one slow API can freeze your entire DRF worker
+
+| Purpose             | Package                   | Reason                    |
+| ------------------- | ------------------------- | ------------------------- |
+| Retries             | `tenacity`                | Retry failed API calls    |
+| Circuit Breaker     | `pybreaker`               | Avoid cascading failures  |
+| Queue               | `celery[redis]`           | Background jobs & retries |
+| Caching             | `django-redis`            | Reduce DB load            |
+| Error tracking      | `sentry-sdk`              | Alert on exceptions       |
+| Health checks       | `django-health-check`     | Detect broken services    |
+| Rate limiting       | `django-ratelimit`        | Prevent abuse             |
+| Standardized errors | `drf-standardized-errors` | Clean API responses       |
+
+
+RUN IT ALL
+python manage.py migrate
+python manage.py runserver
+run celery cmd ==  celery -A penden  worker -l info
+celery -A penden beat -l info
+

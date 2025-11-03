@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: #e7f3ff; padding: 20px; text-align: center; }
+        .order-details { background: #fff; padding: 20px; border: 1px solid #dee2e6; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Order Updated</h1>
+        </div>
+
+        <div class="order-details">
+            <h2>Hello {{ user.first_name }},</h2>
+
+            <p>Your order <strong>#{{ order.id }}</strong> has been updated.</p>
+            <p><strong>Current Status:</strong> {{ order.get_status_display }}</p>
+
+            <p>Please visit your account to view the latest updates.</p>
+
+            <p>Thank you for shopping with us!</p>
+        </div>
+    </div>
+</body>
+</html>

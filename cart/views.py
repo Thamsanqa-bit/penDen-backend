@@ -7,16 +7,46 @@ from cart.models import CartItem
 from .serializers import CartSerializer
 from accounts.models import UserProfile
 from django.views.decorators.cache import cache_page
+from rest_framework.pagination import PageNumberPagination
 
-#@cache_page(60 * 15)  # cache for 15 minutes
 # Create your views here.
-@api_view(['GET'])
 def get_cart(request):
-    cart = Cart.objects.filter(user=request.user.userprofile).first()
+    # Fetch cart and related data efficiently
+    cart = (
+        Cart.objects
+        .filter(user=request.user.userprofile)
+        .prefetch_related('items__product')
+        .first()
+    )
+
     if not cart:
         return Response({'items': [], 'total_price': 0})
-    serializer = CartSerializer(cart)
-    return Response(serializer.data)
+
+    # Get all cart items
+    items = cart.items.all().select_related('product')
+
+    # Apply pagination
+    paginator = PageNumberPagination()
+    paginator.page_size = 10
+    paginated_items = paginator.paginate_queryset(items, request)
+
+    # Serialize paginated items
+    serializer = CartItemSerializer(paginated_items, many=True)
+
+    # Return paginated response with total price
+    total_price = sum(item.product.price * item.quantity for item in items)
+
+    return paginator.get_paginated_response({
+        'items': serializer.data,
+        'total_price': total_price
+    })
+# @api_view(['GET'])
+# def get_cart(request):
+#     cart = Cart.objects.filter(user=request.user.userprofile).first()
+#     if not cart:
+#         return Response({'items': [], 'total_price': 0})
+#     serializer = CartSerializer(cart)
+#     return Response(serializer.data)
 
 @api_view(['POST'])
 def add_to_cart(request):
