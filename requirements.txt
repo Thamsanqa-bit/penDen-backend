@@ -51,3 +51,4 @@ gunicorn
 django-storages
 dj-database-url
 uvicorn
+boto3

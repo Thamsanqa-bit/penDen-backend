@@ -25,6 +25,13 @@ penDen-app/
 # make app resilience and fault tolerance DONE
 #add signal for orders
 #make it mobile friendly
+#whatsAppbot
+
+# stationery packages
+-> user upload stationery list pdf
+-> sends email to the user with quotation
+
+
 
 for API resilence and Fault tolerance
 1. tenacity -> Automatic Retries and Circuit Breakers for External APIs
@@ -56,3 +63,5 @@ python manage.py runserver
 run celery cmd ==  celery -A penden  worker -l info
 celery -A penden beat -l info
 
+PAYMENT
+-> PayFast Gateway for payment ecommerce

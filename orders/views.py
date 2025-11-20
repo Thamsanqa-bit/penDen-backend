@@ -8,46 +8,68 @@ from .serializers import OrderSerializer
 from cart.models import Cart
 from django.views.decorators.cache import cache_page
 
-@cache_page(60 * 15)  # cache for 15 minutes
-
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def checkout(request):
-    user = request.user.userprofile  # Use User instance, not UserProfile
-    # address = request.data.get('address', '')
-    address = user.address
-
-    # Get the cart using UserProfile (for cart) but User for order
     try:
         user_profile = request.user.userprofile
-        cart = Cart.objects.filter(user=user_profile).first()
     except UserProfile.DoesNotExist:
         return Response({'error': 'User profile not found'}, status=status.HTTP_404_NOT_FOUND)
 
-    if not cart or not cart.items.exists():
-        return Response({'error': 'Your cart is empty.'}, status=status.HTTP_400_BAD_REQUEST)
+    # Try to get user's cart
+    cart = Cart.objects.filter(user=user_profile).first()
+
+    if cart and cart.items.exists():
+        items = cart.items.all()
+    else:
+        # Fallback: use frontend payload
+        items_payload = request.data.get("items", [])
+        if not items_payload:
+            return Response({'error': 'Your cart is empty.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Build items dynamically without DB cart
+        class TempItem:
+            def __init__(self, product, quantity):
+                self.product = product
+                self.quantity = quantity
+
+        from products.models import Product  # adjust import
+        items = []
+        for i in items_payload:
+            try:
+                product = Product.objects.get(id=i["product_id"])
+                items.append(TempItem(product, i["quantity"]))
+            except Product.DoesNotExist:
+                continue
+
+        if not items:
+            return Response({'error': 'Your cart is empty.'}, status=status.HTTP_400_BAD_REQUEST)
 
     # Calculate total
-    total_amount = sum(item.product.price * item.quantity for item in cart.items.all())
+    total_amount = sum(item.product.price * item.quantity for item in items)
 
-    # Create order - use User instance here
+    # Create order
     order = Order.objects.create(
-        user=user,  # This should be the Django User instance
+        user=user_profile,
         total_amount=total_amount,
-        address=address
+        address=user_profile.address
     )
 
     # Create order items
-    for item in cart.items.all():
-        OrderItem.objects.create(
+    order_items = [
+        OrderItem(
             order=order,
             product=item.product,
             quantity=item.quantity,
             price=item.product.price
         )
+        for item in items
+    ]
+    OrderItem.objects.bulk_create(order_items)
 
-    # Clear cart
-    cart.items.all().delete()
+    # Clear cart if exists in DB
+    if cart:
+        cart.items.all().delete()
 
     serializer = OrderSerializer(order)
     return Response(serializer.data, status=status.HTTP_201_CREATED)
