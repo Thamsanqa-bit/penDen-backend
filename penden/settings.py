@@ -141,30 +141,39 @@ from celery.schedules import crontab
 
 load_dotenv()
 
-if not os.getenv("DATABASE_URL"):
-    db_name = os.getenv("DB_NAME")
-    db_user = os.getenv("DB_USER")
-    db_pass = os.getenv("DB_PASSWORD")
-    db_host = os.getenv("DB_HOST")
-    db_port = os.getenv("DB_PORT")
-    os.environ["DATABASE_URL"] = f"postgresql://{db_user}:{db_pass}@{db_host}:{db_port}/{db_name}"
-
-# Use dj_database_url for database configuration
+# Database configuration
 DATABASES = {
-    "default": dj_database_url.config(
-        default=os.environ["DATABASE_URL"],
-        conn_max_age=600,  # keep DB connections open for better performance
-    )
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.environ.get('DATABASE_NAME', 'penden_db'),
+        'USER': os.environ.get('DATABASE_USER', ''),
+        'PASSWORD': os.environ.get('DATABASE_PASSWORD', ''),
+        'HOST': os.environ.get('DATABASE_HOST', ''),
+        'PORT': os.environ.get('DATABASE_PORT', '5432'),
+    }
 }
+
+# Render PostgreSQL database URL (takes precedence)
+if 'DATABASE_URL' in os.environ:
+    DATABASES['default'] = dj_database_url.config(
+        default=os.environ.get('DATABASE_URL'),
+        conn_max_age=600,
+        ssl_require=True
+    )
+# if not os.getenv("DATABASE_URL"):
+#     db_name = os.getenv("DB_NAME")
+#     db_user = os.getenv("DB_USER")
+#     db_pass = os.getenv("DB_PASSWORD")
+#     db_host = os.getenv("DB_HOST")
+#     db_port = os.getenv("DB_PORT")
+#     os.environ["DATABASE_URL"] = f"postgresql://{db_user}:{db_pass}@{db_host}:{db_port}/{db_name}"
+#
+# # Use dj_database_url for database configuration
 # DATABASES = {
-#     "default": {
-#         "ENGINE": "django.db.backends.postgresql",
-#         'NAME': os.getenv('DB_NAME'),
-#         'USER': os.getenv('DB_USER'),
-#         'PASSWORD': os.getenv('DB_PASSWORD'),
-#         'HOST': os.getenv('DB_HOST'),
-#         'PORT': os.getenv('DB_PORT'),
-#     }
+#     "default": dj_database_url.config(
+#         default=os.environ["DATABASE_URL"],
+#         conn_max_age=600,  # keep DB connections open for better performance
+#     )
 # }
 
 # Password validation
