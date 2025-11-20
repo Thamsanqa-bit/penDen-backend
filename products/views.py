@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from .models import Product
 from rest_framework import status
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from .serializers import ProductPDFSerializer, ProductSerializer
 from rest_framework.permissions import IsAuthenticated
 from accounts.models import UserProfile
@@ -13,25 +14,74 @@ from django.core.cache import cache
 
 from django.db.models import Q
 
+
 @api_view(['GET'])
 @ratelimit(key='ip', rate='10/m', block=True)
 def product_list(request):
-    cached = cache.get('products')
+    page = request.query_params.get('page', 1)
+    page_size = request.query_params.get('page_size', 12)  # Default 12 products per page
+    search = request.query_params.get('search', '').strip()
+
+    # Create cache key based on parameters
+    cache_key = f'products_page_{page}_size_{page_size}_search_{search}'
+    cached = cache.get(cache_key)
+
     if cached:
         return Response(cached)
-
-    search = request.query_params.get('search', '').strip()
 
     if search:
         products = Product.objects.filter(
             Q(name__icontains=search) | Q(category__name__icontains=search)
-        )
+        ).order_by('id')
     else:
-        products = Product.objects.all()
+        products = Product.objects.all().order_by('id')
 
-    serializer = ProductSerializer(products, many=True)
-    cache.set('products', serializer.data, timeout=300)
-    return Response(serializer.data)
+    # Paginate the results
+    paginator = Paginator(products, page_size)
+
+    try:
+        products_page = paginator.page(page)
+    except PageNotAnInteger:
+        products_page = paginator.page(1)
+    except EmptyPage:
+        products_page = paginator.page(paginator.num_pages)
+
+    serializer = ProductSerializer(products_page, many=True)
+
+    response_data = {
+        'products': serializer.data,
+        'pagination': {
+            'current_page': products_page.number,
+            'total_pages': paginator.num_pages,
+            'total_products': paginator.count,
+            'has_next': products_page.has_next(),
+            'has_previous': products_page.has_previous(),
+            'next_page': products_page.next_page_number() if products_page.has_next() else None,
+            'previous_page': products_page.previous_page_number() if products_page.has_previous() else None,
+        }
+    }
+
+    cache.set(cache_key, response_data, timeout=300)
+    return Response(response_data)
+# @api_view(['GET'])
+# @ratelimit(key='ip', rate='10/m', block=True)
+# def product_list(request):
+#     cached = cache.get('products')
+#     if cached:
+#         return Response(cached)
+#
+#     search = request.query_params.get('search', '').strip()
+#
+#     if search:
+#         products = Product.objects.filter(
+#             Q(name__icontains=search) | Q(category__name__icontains=search)
+#         )
+#     else:
+#         products = Product.objects.all()
+#
+#     serializer = ProductSerializer(products, many=True)
+#     cache.set('products', serializer.data, timeout=300)
+#     return Response(serializer.data)
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
