@@ -53,8 +53,11 @@ DEBUG = True
 
 # ALLOWED_HOSTS = os.environ.get("penden.onrender.com", "frontend-pen-den").split(",")  # e.g. myapp.onrender.com,frontend.onrender.com
 
-ALLOWED_HOSTS = []
-
+ALLOWED_HOSTS = ['penden-backend.onrender.com',
+    'localhost',
+    '127.0.0.1',
+    '.onrender.com', # Wildcard for all Render subdomains]
+]
 # Application definition
 
 INSTALLED_APPS = [
@@ -182,7 +185,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-# CORS_ALLOW_ALL_ORIGINS = True for development only
+CORS_ALLOW_ALL_ORIGINS = True # for development only
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",  # React dev server
     "http://127.0.0.1:3000",
@@ -190,6 +193,20 @@ CORS_ALLOWED_ORIGINS = [
 
 ]
 # "https://your-react-app.onrender.com",
+
+# Additional CORS settings
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
 
 #redis cache
 CACHES = {
