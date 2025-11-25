@@ -53,18 +53,18 @@ DEBUG = os.getenv("DEBUG", "False") == "True"
 
 # ALLOWED_HOSTS = os.environ.get("penden.onrender.com", "frontend-pen-den").split(",")  # e.g. myapp.onrender.com,frontend.onrender.com
 
-ALLOWED_HOSTS = ['penden-backend.onrender.com',
+ALLOWED_HOSTS = [
+    'https://api.penden.online',
+    'https://penden.online',
+    'https://www.penden.online',
+    'penden.online',
+    'penden-backend.onrender.com',
     'localhost',
     '127.0.0.1',
     '.onrender.com', # Wildcard for all Render subdomains]
-    'https://penden.online',
-    'https://www.penden.online',
 ]
 
-CSRF_TRUSTED_ORIGINS = [
-    "https://penden.online",
-    "https://www.penden.online",
-]
+
 # Application definition
 
 INSTALLED_APPS = [
@@ -218,8 +218,10 @@ CORS_ALLOWED_ORIGINS = [
     "https://penden.online",
 
 ]
-
-CSRF_TRUSTED_ORIGINS.append("https://api.penden.online")
+CSRF_TRUSTED_ORIGINS = [
+    "https://api.penden.online",
+    "https://www.penden.online",
+]
 
 # "https://your-react-app.onrender.com",
 
