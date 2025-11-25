@@ -204,13 +204,13 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 if not DEBUG:
     STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
-# Media files configuration
+# AWS Configuration with proper error handling
 AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
 AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
 AWS_STORAGE_BUCKET_NAME = os.getenv('AWS_STORAGE_BUCKET_NAME')
 AWS_S3_REGION_NAME = os.getenv('AWS_S3_REGION_NAME')
 
-# Only use AWS if credentials are provided
+# Only configure AWS if all credentials are present
 if all([AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_STORAGE_BUCKET_NAME, AWS_S3_REGION_NAME]):
     AWS_QUERYSTRING_AUTH = False
     AWS_S3_OBJECT_PARAMETERS = {
@@ -218,10 +218,30 @@ if all([AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_STORAGE_BUCKET_NAME, AWS_S
     }
     AWS_DEFAULT_ACL = 'public-read'
     AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_S3_REGION_NAME}.amazonaws.com'
-    DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+
+    # Custom storage class to handle permission errors
+    from storages.backends.s3boto3 import S3Boto3Storage
+
+
+    class SafeS3Boto3Storage(S3Boto3Storage):
+        def delete(self, name):
+            try:
+                super().delete(name)
+                return True
+            except Exception as e:
+                # Log but don't raise exception
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.error(f"S3 delete permission denied for {name}. Please update IAM policy.")
+                return False
+
+
+    DEFAULT_FILE_STORAGE = 'penden.settings.SafeS3Boto3Storage'
     MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/'
+
 else:
-    # Fallback to local media storage
+    # Fallback to local storage
+    DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
     MEDIA_URL = '/media/'
     MEDIA_ROOT = BASE_DIR / 'media'
 
