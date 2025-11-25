@@ -160,24 +160,41 @@ from celery.schedules import crontab
 load_dotenv()
 
 # Database configuration
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.environ.get('DATABASE_NAME', 'penden_db'),
-        'USER': os.environ.get('DATABASE_USER', ''),
-        'PASSWORD': os.environ.get('DATABASE_PASSWORD', ''),
-        'HOST': os.environ.get('DATABASE_HOST', ''),
-        'PORT': os.environ.get('DATABASE_PORT', '5432'),
-    }
-}
+# DATABASE_URL = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': os.environ.get('DATABASE_NAME', 'penden_db'),
+#         'USER': os.environ.get('DATABASE_USER', ''),
+#         'PASSWORD': os.environ.get('DATABASE_PASSWORD', ''),
+#         'HOST': os.environ.get('DATABASE_HOST', ''),
+#         'PORT': os.environ.get('DATABASE_PORT', '5432'),
+#     }
+# }
 
 # Render PostgreSQL database URL (takes precedence)
-if 'DATABASE_URL' in os.environ:
-    DATABASES['default'] = dj_database_url.config(
+# if 'DATABASE_URL' in os.environ:
+#     DATABASES['default'] = dj_database_url.config(
+#         default=os.environ.get('DATABASE_URL'),
+#         conn_max_age=600,
+#         ssl_require=True
+#     )
+
+DATABASES = {
+    'default': dj_database_url.config(
         default=os.environ.get('DATABASE_URL'),
         conn_max_age=600,
         ssl_require=True
-    )
+        )
+}
+
+# Add this to test database connection
+try:
+    import django.db.utils
+    from django.db import connections
+    db_conn = connections['default']
+    c = db_conn.cursor()
+except django.db.utils.OperationalError as e:
+    print(f"Database connection error: {e}")
 
     # Security settings for production
 if not DEBUG:
