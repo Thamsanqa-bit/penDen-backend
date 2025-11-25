@@ -49,18 +49,10 @@ SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 # DEBUG = True
-DEBUG = os.getenv("DEBUG", "False") == "True"
-ALLOWED_HOSTS = ['*', '.onrender.com']
+# DEBUG = os.getenv("DEBUG", "False") == "True"
+# ALLOWED_HOSTS = ['*', '.onrender.com']
 # ALLOWED_HOSTS = os.environ.get("penden.onrender.com", "frontend-pen-den").split(",")  # e.g. myapp.onrender.com,frontend.onrender.com
 
-# ALLOWED_HOSTS = [
-#     "api.penden.online",
-#     'https://api.penden.online',
-#     'penden-backend.onrender.com',
-#     'localhost',
-#     '127.0.0.1',
-#     '.onrender.com', # Wildcard for all Render subdomains]
-# ]
 CSRF_TRUSTED_ORIGINS = [
     "https://api.penden.online",
     "https://penden.online",
@@ -183,8 +175,7 @@ from dotenv import load_dotenv
 # Load environment variables from .env file
 load_dotenv()
 
-# Database configuration
-# Parse database configuration from DATABASE_URL
+# Database
 DATABASES = {
     'default': dj_database_url.config(
         default=os.environ.get('DATABASE_URL'),
@@ -193,11 +184,20 @@ DATABASES = {
     )
 }
 
-# Force SSL connection
-if os.environ.get('DATABASE_URL'):
+# Add SSL options explicitly
+if DATABASES['default']:
     DATABASES['default']['OPTIONS'] = {
         'sslmode': 'require',
     }
+
+# Other settings
+DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
+ALLOWED_HOSTS = ['api.penden.online', '.onrender.com', 'localhost', '127.0.0.1']
+SECRET_KEY = os.environ.get('SECRET_KEY', 'your-secret-key-here')
+
+# Static files
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 if not DEBUG:
     SECURE_SSL_REDIRECT = True
@@ -315,11 +315,11 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 # settings.py
-STATIC_URL = '/static/'
-STATICFILES_DIRS = [
-    BASE_DIR / "static",  # if your file is in a 'static' folder
-]
-STATIC_ROOT = BASE_DIR / "staticfiles"  # for production
+# STATIC_URL = '/static/'
+# STATICFILES_DIRS = [
+#     BASE_DIR / "static",  # if your file is in a 'static' folder
+# ]
+# STATIC_ROOT = BASE_DIR / "staticfiles"  # for production
 
 if not DEBUG:
     STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
