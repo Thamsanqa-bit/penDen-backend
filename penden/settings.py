@@ -48,8 +48,8 @@ MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/'
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-# DEBUG = os.getenv("DEBUG", "False") == "True"
+# DEBUG = True
+DEBUG = os.getenv("DEBUG", "False") == "True"
 
 # ALLOWED_HOSTS = os.environ.get("penden.onrender.com", "frontend-pen-den").split(",")  # e.g. myapp.onrender.com,frontend.onrender.com
 
@@ -142,39 +142,47 @@ from celery.schedules import crontab
 load_dotenv()
 
 # Database configuration
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME': os.environ.get('DATABASE_NAME', 'penden_db'),
-#         'USER': os.environ.get('DATABASE_USER', ''),
-#         'PASSWORD': os.environ.get('DATABASE_PASSWORD', ''),
-#         'HOST': os.environ.get('DATABASE_HOST', ''),
-#         'PORT': os.environ.get('DATABASE_PORT', '5432'),
-#     }
-# }
-#
-# # Render PostgreSQL database URL (takes precedence)
-# if 'DATABASE_URL' in os.environ:
-#     DATABASES['default'] = dj_database_url.config(
-#         default=os.environ.get('DATABASE_URL'),
-#         conn_max_age=600,
-#         ssl_require=True
-#     )
-if not os.getenv("DATABASE_URL"):
-    db_name = os.getenv("DB_NAME")
-    db_user = os.getenv("DB_USER")
-    db_pass = os.getenv("DB_PASSWORD")
-    db_host = os.getenv("DB_HOST")
-    db_port = os.getenv("DB_PORT")
-    os.environ["DATABASE_URL"] = f"postgresql://{db_user}:{db_pass}@{db_host}:{db_port}/{db_name}"
-
-# Use dj_database_url for database configuration
 DATABASES = {
-    "default": dj_database_url.config(
-        default=os.environ["DATABASE_URL"],
-        conn_max_age=600,  # keep DB connections open for better performance
-    )
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.environ.get('DATABASE_NAME', 'penden_db'),
+        'USER': os.environ.get('DATABASE_USER', ''),
+        'PASSWORD': os.environ.get('DATABASE_PASSWORD', ''),
+        'HOST': os.environ.get('DATABASE_HOST', ''),
+        'PORT': os.environ.get('DATABASE_PORT', '5432'),
+    }
 }
+
+# Render PostgreSQL database URL (takes precedence)
+if 'DATABASE_URL' in os.environ:
+    DATABASES['default'] = dj_database_url.config(
+        default=os.environ.get('DATABASE_URL'),
+        conn_max_age=600,
+        ssl_require=True
+    )
+
+    # Security settings for production
+if not DEBUG:
+    SECURE_SSL_REDIRECT = True
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+
+# if not os.getenv("DATABASE_URL"):
+#     db_name = os.getenv("DB_NAME")
+#     db_user = os.getenv("DB_USER")
+#     db_pass = os.getenv("DB_PASSWORD")
+#     db_host = os.getenv("DB_HOST")
+#     db_port = os.getenv("DB_PORT")
+#     os.environ["DATABASE_URL"] = f"postgresql://{db_user}:{db_pass}@{db_host}:{db_port}/{db_name}"
+#
+# # Use dj_database_url for database configuration
+# DATABASES = {
+#     "default": dj_database_url.config(
+#         default=os.environ["DATABASE_URL"],
+#         conn_max_age=600,  # keep DB connections open for better performance
+#     )
+# }
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
@@ -199,6 +207,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",  # React dev server
     "http://127.0.0.1:3000",
     "https://frontend-pen-den.onrender.com",
+    "https://penden.online"
 
 ]
 # "https://your-react-app.onrender.com",

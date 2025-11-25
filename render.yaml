@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: penden
+    env: python
+    plan: free
+    buildCommand: "./build.sh"
+    startCommand: "gunicorn penden.wsgi:application"
+    envVars:
+      - key: DJANGO_SETTINGS_MODULE
+        value: penden.settings
+      - key: SECRET_KEY
+        value: django-insecure-1f#csh$!c_hfjsebb$k!-@q_vp%5i04^gy2q-v9*&h9ufy2_w=
+      - key: DEBUG
+        value: False
+      - key: ALLOWED_HOSTS
+        value: penden.online,render.com
