@@ -16,19 +16,37 @@ from django.views.decorators.cache import cache_page
 @api_view(['POST'])
 def register(request):
     serializer = RegisterSerializer(data=request.data)
-    #hash password
 
     if serializer.is_valid():
         user = serializer.save()
-
         token, _ = Token.objects.get_or_create(user=user)
+
         return Response({
-            'message': 'User registered successfully',
-            'token': token.key,
-            'username': user.username,
-            'email': user.email,
+            "message": "User registered successfully",
+            "token": token.key,
+            "username": user.username,
+            "email": user.email,
         }, status=status.HTTP_201_CREATED)
+
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+# @api_view(['POST'])
+# def register(request):
+#     serializer = RegisterSerializer(data=request.data)
+#     #hash password
+#
+#     if serializer.is_valid():
+#         user = serializer.save()
+#
+#         token, _ = Token.objects.get_or_create(user=user)
+#         return Response({
+#             'message': 'User registered successfully',
+#             'token': token.key,
+#             'username': user.username,
+#             'email': user.email,
+#         }, status=status.HTTP_201_CREATED)
+#     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['POST'])
 def login_user(request):

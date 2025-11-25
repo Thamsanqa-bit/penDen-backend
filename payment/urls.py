@@ -3,5 +3,5 @@ from .views import create_payment, payfast_notify
 
 urlpatterns = [
     path('api/create-payment/', create_payment, name='create-payment'),
-    path('api/notify/', payfast_notify, name='payfast_notify'),
+    path('api/payment/notify/', payfast_notify, name='payfast_notify'),
 ]

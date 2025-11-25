@@ -4,7 +4,7 @@ from rest_framework.decorators import api_view, permission_classes
 from .models import Product
 from rest_framework import status
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from .serializers import ProductPDFSerializer, ProductSerializer
+from .serializers import ProductPDFSerializer, ProductSerializer, ImageSerializer
 from rest_framework.permissions import IsAuthenticated
 from accounts.models import UserProfile
 
@@ -14,74 +14,108 @@ from django.core.cache import cache
 
 from django.db.models import Q
 
-
 @api_view(['GET'])
-@ratelimit(key='ip', rate='10/m', block=True)
 def product_list(request):
     page = request.query_params.get('page', 1)
-    page_size = request.query_params.get('page_size', 12)  # Default 12 products per page
+    page_size = request.query_params.get('page_size', 12)
     search = request.query_params.get('search', '').strip()
+    category = request.query_params.get('category', '').strip()
 
-    # Create cache key based on parameters
-    cache_key = f'products_page_{page}_size_{page_size}_search_{search}'
+    cache_key = f'products_page_{page}_size_{page_size}_search_{search}_category_{category}'
     cached = cache.get(cache_key)
 
     if cached:
         return Response(cached)
 
-    if search:
-        products = Product.objects.filter(
-            Q(name__icontains=search) | Q(category__name__icontains=search)
-        ).order_by('id')
-    else:
-        products = Product.objects.all().order_by('id')
+    # Use prefetch_related to optimize database queries
+    products = Product.objects.prefetch_related('category').all()
 
-    # Paginate the results
+    # Filter by category if selected
+    if category:
+        products = products.filter(category__name__iexact=category)
+
+    # Search box still works
+    if search:
+        products = products.filter(
+            Q(name__icontains=search) | Q(category__name__icontains=search)
+        )
+
+    products = products.order_by("id")
+
     paginator = Paginator(products, page_size)
 
     try:
         products_page = paginator.page(page)
-    except PageNotAnInteger:
+    except:
         products_page = paginator.page(1)
-    except EmptyPage:
-        products_page = paginator.page(paginator.num_pages)
 
     serializer = ProductSerializer(products_page, many=True)
 
     response_data = {
-        'products': serializer.data,
-        'pagination': {
-            'current_page': products_page.number,
-            'total_pages': paginator.num_pages,
-            'total_products': paginator.count,
-            'has_next': products_page.has_next(),
-            'has_previous': products_page.has_previous(),
-            'next_page': products_page.next_page_number() if products_page.has_next() else None,
-            'previous_page': products_page.previous_page_number() if products_page.has_previous() else None,
-        }
+        "products": serializer.data,
+        "pagination": {
+            "current_page": products_page.number,
+            "total_pages": paginator.num_pages,
+            "total_products": paginator.count,
+            "has_next": products_page.has_next(),
+            "has_previous": products_page.has_previous(),
+            "next_page": products_page.next_page_number() if products_page.has_next() else None,
+            "previous_page": products_page.previous_page_number() if products_page.has_previous() else None,
+        },
     }
 
     cache.set(cache_key, response_data, timeout=300)
     return Response(response_data)
+
 # @api_view(['GET'])
 # @ratelimit(key='ip', rate='10/m', block=True)
 # def product_list(request):
-#     cached = cache.get('products')
+#     page = request.query_params.get('page', 1)
+#     page_size = request.query_params.get('page_size', 12)  # Default 12 products per page
+#     search = request.query_params.get('search', '').strip()
+#
+#     # Create cache key based on parameters
+#     cache_key = f'products_page_{page}_size_{page_size}_search_{search}'
+#     cached = cache.get(cache_key)
+#
 #     if cached:
 #         return Response(cached)
-#
-#     search = request.query_params.get('search', '').strip()
 #
 #     if search:
 #         products = Product.objects.filter(
 #             Q(name__icontains=search) | Q(category__name__icontains=search)
-#         )
+#         ).order_by('id')
 #     else:
-#         products = Product.objects.all()
+#         products = Product.objects.all().order_by('id')
 #
-#     serializer = ProductSerializer(products, many=True)
-#     cache.set('products', serializer.data, timeout=300)
-#     return Response(serializer.data)
+#     # Paginate the results
+#     paginator = Paginator(products, page_size)
+#
+#     try:
+#         products_page = paginator.page(page)
+#     except PageNotAnInteger:
+#         products_page = paginator.page(1)
+#     except EmptyPage:
+#         products_page = paginator.page(paginator.num_pages)
+#
+#     serializer = ProductSerializer(products_page, many=True)
+#
+#     response_data = {
+#         'products': serializer.data,
+#         'pagination': {
+#             'current_page': products_page.number,
+#             'total_pages': paginator.num_pages,
+#             'total_products': paginator.count,
+#             'has_next': products_page.has_next(),
+#             'has_previous': products_page.has_previous(),
+#             'next_page': products_page.next_page_number() if products_page.has_next() else None,
+#             'previous_page': products_page.previous_page_number() if products_page.has_previous() else None,
+#         }
+#     }
+#
+#     cache.set(cache_key, response_data, timeout=300)
+#     return Response(response_data)
+
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -107,5 +141,31 @@ def upload_pdf(request):
         serializer.save()
         return Response({
             "message": f"Thank you {user or ''}! Your product list has been received. We will get back to you at {email} soon."
+        })
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+def image_upload(request):
+    user = UserProfile.objects.get(user=request.user)
+
+    # Extract optional fields from POST
+    email = request.data.get('email') or user.email
+    phone = request.data.get('phone')
+
+    if not email:
+        return Response({'error': 'Missing email or phone'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Merge user data into serializer
+    data = request.data.copy()
+    data['user'] = user.id
+    data['email'] = email
+    data['phone'] = phone
+
+    serializer = ImageSerializer(data=data)
+    if serializer.is_valid():
+        serializer.save()
+
+        return Response({
+            "message": f"Thank you {user or ''}! Your image upload has been received. We will get back to you at {email} soon."
         })
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

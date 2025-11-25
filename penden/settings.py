@@ -142,39 +142,39 @@ from celery.schedules import crontab
 load_dotenv()
 
 # Database configuration
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.environ.get('DATABASE_NAME', 'penden_db'),
-        'USER': os.environ.get('DATABASE_USER', ''),
-        'PASSWORD': os.environ.get('DATABASE_PASSWORD', ''),
-        'HOST': os.environ.get('DATABASE_HOST', ''),
-        'PORT': os.environ.get('DATABASE_PORT', '5432'),
-    }
-}
-
-# Render PostgreSQL database URL (takes precedence)
-if 'DATABASE_URL' in os.environ:
-    DATABASES['default'] = dj_database_url.config(
-        default=os.environ.get('DATABASE_URL'),
-        conn_max_age=600,
-        ssl_require=True
-    )
-# if not os.getenv("DATABASE_URL"):
-#     db_name = os.getenv("DB_NAME")
-#     db_user = os.getenv("DB_USER")
-#     db_pass = os.getenv("DB_PASSWORD")
-#     db_host = os.getenv("DB_HOST")
-#     db_port = os.getenv("DB_PORT")
-#     os.environ["DATABASE_URL"] = f"postgresql://{db_user}:{db_pass}@{db_host}:{db_port}/{db_name}"
-#
-# # Use dj_database_url for database configuration
 # DATABASES = {
-#     "default": dj_database_url.config(
-#         default=os.environ["DATABASE_URL"],
-#         conn_max_age=600,  # keep DB connections open for better performance
-#     )
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': os.environ.get('DATABASE_NAME', 'penden_db'),
+#         'USER': os.environ.get('DATABASE_USER', ''),
+#         'PASSWORD': os.environ.get('DATABASE_PASSWORD', ''),
+#         'HOST': os.environ.get('DATABASE_HOST', ''),
+#         'PORT': os.environ.get('DATABASE_PORT', '5432'),
+#     }
 # }
+#
+# # Render PostgreSQL database URL (takes precedence)
+# if 'DATABASE_URL' in os.environ:
+#     DATABASES['default'] = dj_database_url.config(
+#         default=os.environ.get('DATABASE_URL'),
+#         conn_max_age=600,
+#         ssl_require=True
+#     )
+if not os.getenv("DATABASE_URL"):
+    db_name = os.getenv("DB_NAME")
+    db_user = os.getenv("DB_USER")
+    db_pass = os.getenv("DB_PASSWORD")
+    db_host = os.getenv("DB_HOST")
+    db_port = os.getenv("DB_PORT")
+    os.environ["DATABASE_URL"] = f"postgresql://{db_user}:{db_pass}@{db_host}:{db_port}/{db_name}"
+
+# Use dj_database_url for database configuration
+DATABASES = {
+    "default": dj_database_url.config(
+        default=os.environ["DATABASE_URL"],
+        conn_max_age=600,  # keep DB connections open for better performance
+    )
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
@@ -248,6 +248,8 @@ sentry_sdk.init(
 )
 
 SESSION_ENGINE = "django.contrib.sessions.backends.cache"
+SESSION_SAVE_EVERY_REQUEST = True
+SESSION_COOKIE_AGE = 1209600  # 2 weeks in seconds (optional)
 SESSION_CACHE_ALIAS = "default"
 
 CACHEOPS_REDIS = "redis://127.0.0.1:6379/2"
@@ -275,8 +277,16 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = "static/"
-STATIC_ROOT = BASE_DIR / "staticfiles"
+# settings.py
+STATIC_URL = '/static/'
+STATICFILES_DIRS = [
+    BASE_DIR / "static",  # if your file is in a 'static' folder
+]
+STATIC_ROOT = BASE_DIR / "staticfiles"  # for production
+
+if not DEBUG:
+    STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
@@ -294,18 +304,42 @@ PASSWORD_HASHERS = [
 ]
 
 
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'  # For production
-# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # For development
+# Email Configuration for Domain Email
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 
-EMAIL_HOST = 'smtp.gmail.com'  # Or your email provider
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'thamsanqambodla@gmail.com'
-EMAIL_HOST_PASSWORD = 'Neoentle@290822'
-DEFAULT_FROM_EMAIL = 'your-store@example.com'
+# For cPanel/WHM or similar hosting
+EMAIL_HOST = 'mail.yourdomain.com'  # or your server's SMTP host
+EMAIL_PORT = 587  # Usually 587 for TLS, 465 for SSL, 25 for non-secure
+EMAIL_USE_TLS = True  # Use True for port 587, False for port 465
+EMAIL_USE_SSL = False  # Use True for port 465, False for port 587
+
+# Your domain email credentials
+EMAIL_HOST_USER = 'noreply@yourdomain.com'  # Your domain email address
+EMAIL_HOST_PASSWORD = 'your-email-password'  # Password for that email account
+
+# Email settings
+DEFAULT_FROM_EMAIL = 'noreply@yourdomain.com'
+SERVER_EMAIL = 'noreply@yourdomain.com'
+
+# Admin email for notifications
+ADMIN_EMAIL = 'admin@yourdomain.com'
+
+# Optional: Use environment variables for security
+# import os
+# EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', 'noreply@yourdomain.com')
+# EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
+# ADMIN_EMAIL = os.getenv('ADMIN_EMAIL', 'admin@yourdomain.com')
 
 # Admin notifications
 ADMINS = [
     ('Admin Name', 'admin@example.com'),
 ]
+
+PAYFAST_MERCHANT_ID = os.getenv("PAYFAST_MERCHANT_ID")
+PAYFAST_MERCHANT_KEY = os.getenv("PAYFAST_MERCHANT_KEY")
+
+PAYFAST_RETURN_URL = os.getenv("PAYFAST_RETURN_URL")
+PAYFAST_CANCEL_URL = os.getenv("PAYFAST_CANCEL_URL")
+PAYFAST_NOTIFY_URL = os.getenv("PAYFAST_NOTIFY_URL")
+
 

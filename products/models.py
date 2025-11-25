@@ -39,3 +39,8 @@ class ProductListPDF(models.Model):
 
     def __str__(self):
         return self.title
+
+class ImageUpload(models.Model):
+    image = models.ImageField(upload_to='product_images/')
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+

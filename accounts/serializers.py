@@ -19,23 +19,34 @@ class RegisterSerializer(serializers.ModelSerializer):
         model = User
         fields = ['username', 'email', 'phone', 'address', 'password']
 
+    def validate_email(self, value):
+        if UserProfile.objects.filter(email=value).exists():
+            raise serializers.ValidationError("A user with this email already exists.")
+        return value
+
     def create(self, validated_data):
+        # Extract custom fields BEFORE passing remaining data to User model
         phone = validated_data.pop('phone')
         address = validated_data.pop('address')
-        password = validated_data.pop('password')
         email = validated_data.pop('email')
+        password = validated_data.pop('password')
 
-        user = User.objects.create_user(**validated_data)
-        user.set_password(password)
-        user.save()
+        # Create Django User
+        user = User.objects.create_user(
+            username=validated_data['username'],
+            email=email,
+            password=password
+        )
 
-        hashed_password = make_password(password)
+        # Create UserProfile
+        UserProfile.objects.create(
+            user=user,
+            email=email,
+            phone=phone,
+            address=address,
+            password=make_password(password)
+        )
 
-        UserProfile.objects.create(user=user,
-                                   email=email,
-                                   phone=phone,
-                                   address=address,
-                                   password=hashed_password)
         return user
 
 class LoginSerializer(serializers.Serializer):

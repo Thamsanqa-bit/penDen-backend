@@ -64,6 +64,7 @@ def add_to_cart(request):
     # Ensure the session exists (for guest users)
     if not request.session.session_key:
         request.session.create()
+        request.session.save()
 
     # If user is authenticated, use user-based cart
     if request.user.is_authenticated:
@@ -90,31 +91,52 @@ def add_to_cart(request):
     serializer = CartSerializer(cart)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
+
 @api_view(['POST'])
 def remove_from_cart(request):
+    print(f"DEBUG: User: {request.user}, Authenticated: {request.user.is_authenticated}")
+    print(f"DEBUG: Product ID: {request.data.get('product_id')}")
+    print(f"DEBUG: Initial Session Key: {request.session.session_key}")
+
     product_id = request.data.get('product_id')
-    quantity = int(request.data.get('quantity', 1))
+
+    try:
+        quantity = int(request.data.get('quantity', 1))
+    except (TypeError, ValueError):
+        return Response({'error': 'Invalid quantity'}, status=status.HTTP_400_BAD_REQUEST)
 
     if not product_id:
         return Response({'error': 'Invalid request'}, status=status.HTTP_400_BAD_REQUEST)
 
-    # Ensure session exists for guest users
-    if not request.session.session_key:
-        request.session.create()
+    # FIXED: Proper session handling for guest users
+    if not request.user.is_authenticated:
+        if not request.session.session_key:
+            request.session.create()
+            request.session.save()  # This is crucial - saves the session to database
+            print(f"DEBUG: Created new session key: {request.session.session_key}")
+        else:
+            print(f"DEBUG: Using existing session key: {request.session.session_key}")
 
     # Identify which cart to use
     if request.user.is_authenticated:
         try:
             # Get the UserProfile instance instead of User
             user_profile = request.user.userprofile
-            cart = Cart.objects.filter(user=user_profile).first()
+            cart, created = Cart.objects.get_or_create(user=user_profile)
+            if created:
+                print(f"DEBUG: Created new cart for authenticated user")
         except UserProfile.DoesNotExist:
             return Response({'error': 'User profile not found'}, status=status.HTTP_404_NOT_FOUND)
     else:
-        cart = Cart.objects.filter(session_key=request.session.session_key).first()
+        # FIXED: Use get_or_create for guest cart with proper session key
+        if not request.session.session_key:
+            return Response({'error': 'Session not available'}, status=status.HTTP_400_BAD_REQUEST)
 
-    if not cart:
-        return Response({'error': 'Cart not found'}, status=status.HTTP_404_NOT_FOUND)
+        cart, created = Cart.objects.get_or_create(session_key=request.session.session_key)
+        if created:
+            print(f"DEBUG: Created new cart for session: {request.session.session_key}")
+
+    print(f"DEBUG: Cart ID: {cart.id}")
 
     # Try to find the product
     try:
@@ -122,22 +144,94 @@ def remove_from_cart(request):
     except Product.DoesNotExist:
         return Response({'error': 'Product not found'}, status=status.HTTP_404_NOT_FOUND)
 
-    # Find the cart item
-    try:
-        cart_item = CartItem.objects.get(cart=cart, product=product)
-    except CartItem.DoesNotExist:
-        return Response({'error': 'Item not found in cart'}, status=status.HTTP_404_NOT_FOUND)
+    cart_items = CartItem.objects.filter(cart=cart)
+    print(f"DEBUG: Cart has {cart_items.count()} items")
+    print(f"DEBUG: Cart items: {list(cart_items.values_list('product_id', flat=True))}")
+
+    # Find the cart item - using filter().first() for better handling
+    cart_item = CartItem.objects.filter(cart=cart, product=product).first()
+
+    if not cart_item:
+        return Response({
+            'error': 'Item not found in cart',
+            'debug_info': {
+                'cart_id': cart.id,
+                'product_id': product_id,
+                'cart_items_count': cart_items.count(),
+                'existing_product_ids': list(cart_items.values_list('product_id', flat=True)),
+                'session_key': request.session.session_key,
+                'user_authenticated': request.user.is_authenticated
+            }
+        }, status=status.HTTP_404_NOT_FOUND)
 
     # Reduce or remove quantity
     if cart_item.quantity > quantity:
         cart_item.quantity -= quantity
         cart_item.save()
+        print(f"DEBUG: Reduced quantity to {cart_item.quantity}")
     else:
         cart_item.delete()
+        print(f"DEBUG: Removed item completely from cart")
 
     # Return updated cart
     serializer = CartSerializer(cart)
     return Response(serializer.data, status=status.HTTP_200_OK)
+# @api_view(['POST'])
+# def remove_from_cart(request):
+#     print(f"DEBUG: User: {request.user}, Authenticated: {request.user.is_authenticated}")
+#     print(f"DEBUG: Product ID: {request.data.get('product_id')}")
+#
+#     product_id = request.data.get('product_id')
+#     quantity = int(request.data.get('quantity', 1))
+#
+#     if not product_id:
+#         return Response({'error': 'Invalid request'}, status=status.HTTP_400_BAD_REQUEST)
+#
+#     # Ensure session exists for guest users
+#     if not request.session.session_key:
+#         request.session.create()
+#         request.session.save()
+#         print(f"DEBUG: Created new session key: {request.session.session_key}")
+#     # Identify which cart to use
+#     if request.user.is_authenticated:
+#         try:
+#             # Get the UserProfile instance instead of User
+#             user_profile = request.user.userprofile
+#             cart = Cart.objects.filter(user=user_profile).first()
+#         except UserProfile.DoesNotExist:
+#             return Response({'error': 'User profile not found'}, status=status.HTTP_404_NOT_FOUND)
+#     else:
+#         cart = Cart.objects.filter(session_key=request.session.session_key).first()
+#
+#     if not cart:
+#         return Response({'error': 'Cart not found'}, status=status.HTTP_404_NOT_FOUND)
+#
+#     # Try to find the product
+#     try:
+#         product = Product.objects.get(id=product_id)
+#     except Product.DoesNotExist:
+#         return Response({'error': 'Product not found'}, status=status.HTTP_404_NOT_FOUND)
+#
+#     cart_items = CartItem.objects.filter(cart=cart)
+#     print(f"DEBUG: Cart has {cart_items.count()} items")
+#     print(f"DEBUG: Cart items: {list(cart_items.values_list('product_id', flat=True))}")
+#
+#     # Find the cart item
+#     try:
+#         cart_item = CartItem.objects.get(cart=cart, product=product)
+#     except CartItem.DoesNotExist:
+#         return Response({'error': 'Item not found in cart'}, status=status.HTTP_404_NOT_FOUND)
+#
+#     # Reduce or remove quantity
+#     if cart_item.quantity > quantity:
+#         cart_item.quantity -= quantity
+#         cart_item.save()
+#     else:
+#         cart_item.delete()
+#
+#     # Return updated cart
+#     serializer = CartSerializer(cart)
+#     return Response(serializer.data, status=status.HTTP_200_OK)
 
 @api_view(['PUT'])
 def update_cart(request):
@@ -158,6 +252,7 @@ def update_cart(request):
     # Ensure session exists (for guest carts)
     if not request.session.session_key:
         request.session.create()
+        request.session.save()
 
     # Get correct cart depending on auth
     user_profile = request.user.userprofile
