@@ -20,60 +20,30 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 load_dotenv(os.path.join(BASE_DIR, '.env'))
 
-AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
-AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
-AWS_STORAGE_BUCKET_NAME = os.getenv('AWS_STORAGE_BUCKET_NAME')
-AWS_S3_REGION_NAME = os.getenv('AWS_S3_REGION_NAME')
+# Quick-start development settings
+SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "fallback-secret-key-for-development-only")
 
-AWS_QUERYSTRING_AUTH = False
-AWS_S3_OBJECT_PARAMETERS = {
-    'CacheControl': 'max-age=86400',
-}
-AWS_DEFAULT_ACL = 'public-read'
-
-AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_S3_REGION_NAME}.amazonaws.com'
-
-AWS_OBJECT_PARAMETERS = {}
-
-DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-
-MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/'
-
-
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
-
-# SECURITY WARNING: keep the secret key used in production secret!
-# SECRET_KEY = "django-insecure-1f#csh$!c_hfjsebb$k!-@q_vp%5i04^gy2q-v9*&h9ufy2_w="
-SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
-
-# SECURITY WARNING: don't run with debug turned on in production!
-# DEBUG = True
-# DEBUG = os.getenv("DEBUG", "False") == "True"
-# ALLOWED_HOSTS = ['*', '.onrender.com']
-# ALLOWED_HOSTS = os.environ.get("penden.onrender.com", "frontend-pen-den").split(",")  # e.g. myapp.onrender.com,frontend.onrender.com
 DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
+
 ALLOWED_HOSTS = [
     'api.penden.online',
     '.onrender.com',
     'localhost',
     '127.0.0.1',
-    'penden.online',  # Add your main domain
+    'penden.online',
 ]
+
 CSRF_TRUSTED_ORIGINS = [
     "https://api.penden.online",
     "https://penden.online",
 ]
-#CORS_ALLOW_ALL_ORIGINS = True # for development only
+
 CORS_ALLOWED_ORIGINS = [
     "https://frontend-pen-den.onrender.com",
     "https://penden.online",
-
 ]
 
-
 # Application definition
-
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -81,8 +51,8 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    #local apps
 
+    # Local apps
     "accounts",
     "products",
     "footer",
@@ -91,8 +61,8 @@ INSTALLED_APPS = [
     "payment",
     "cart",
     "bot",
-    #third party
 
+    # Third party
     "rest_framework",
     "corsheaders",
     "rest_framework.authtoken",
@@ -104,8 +74,6 @@ INSTALLED_APPS = [
     "health_check.storage",
     "drf_standardized_errors",
     "storages",
-    # "cacheops",
-
 ]
 
 REST_FRAMEWORK = {
@@ -116,9 +84,9 @@ REST_FRAMEWORK = {
 }
 
 MIDDLEWARE = [
+    "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "corsheaders.middleware.CorsMiddleware",
-    "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -146,35 +114,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "penden.wsgi.application"
 
-
-# Database
-# https://docs.djangoproject.com/en/5.2/ref/settings/#databases
-
-from dotenv import load_dotenv
-from celery.schedules import crontab
-
-load_dotenv()
-
-# Database configuration
-# DATABASE_URL = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME': os.environ.get('DATABASE_NAME', 'penden_db'),
-#         'USER': os.environ.get('DATABASE_USER', ''),
-#         'PASSWORD': os.environ.get('DATABASE_PASSWORD', ''),
-#         'HOST': os.environ.get('DATABASE_HOST', ''),
-#         'PORT': os.environ.get('DATABASE_PORT', '5432'),
-#     }
-# }
-
-
-import os
-import dj_database_url
-from dotenv import load_dotenv
-
-# Load environment variables from .env file
-load_dotenv()
-
 # Database
 DATABASES = {
     'default': dj_database_url.config(
@@ -190,40 +129,7 @@ if DATABASES['default']:
         'sslmode': 'require',
     }
 
-# Other settings
-# DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
-# ALLOWED_HOSTS = ['api.penden.online', '.onrender.com', 'localhost', '127.0.0.1']
-SECRET_KEY = os.environ.get('SECRET_KEY', 'your-secret-key-here')
-
-# Static files
-STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-
-if not DEBUG:
-    SECURE_SSL_REDIRECT = True
-    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-    SESSION_COOKIE_SECURE = True
-    CSRF_COOKIE_SECURE = True
-
-# if not os.getenv("DATABASE_URL"):
-#     db_name = os.getenv("DB_NAME")
-#     db_user = os.getenv("DB_USER")
-#     db_pass = os.getenv("DB_PASSWORD")
-#     db_host = os.getenv("DB_HOST")
-#     db_port = os.getenv("DB_PORT")
-#     os.environ["DATABASE_URL"] = f"postgresql://{db_user}:{db_pass}@{db_host}:{db_port}/{db_name}"
-#
-# # Use dj_database_url for database configuration
-# DATABASES = {
-#     "default": dj_database_url.config(
-#         default=os.environ["DATABASE_URL"],
-#         conn_max_age=600,  # keep DB connections open for better performance
-#     )
-# }
-
 # Password validation
-# https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
-
 AUTH_PASSWORD_VALIDATORS = [
     {
         "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
@@ -238,7 +144,15 @@ AUTH_PASSWORD_VALIDATORS = [
         "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
 ]
-SECURE_SSL_REDIRECT = False
+
+# Security settings
+if not DEBUG:
+    SECURE_SSL_REDIRECT = True
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+else:
+    SECURE_SSL_REDIRECT = False
 
 # Additional CORS settings
 CORS_ALLOW_CREDENTIALS = True
@@ -254,129 +168,115 @@ CORS_ALLOW_HEADERS = [
     'x-requested-with',
 ]
 
-#redis cache
+# Redis cache - simplified for production
 CACHES = {
     "default": {
-        "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "redis://127.0.0.1:6379/1",  # Redis DB 1
-        "OPTIONS": {
-            "CLIENT_CLASS": "django_redis.client.DefaultClient",
-            "SERIALIZER": "django_redis.serializers.json.JSONSerializer",
-        }
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": "unique-snowflake",
     }
 }
 
-# Celery
-CELERY_BROKER_URL = "redis://127.0.0.1:6379/0"
-CELERY_RESULT_BACKEND = "redis://127.0.0.1:6379/0"
-CELERY_BEAT_SCHEDULE = {
-    "retry_failed_orders": {
-        "task": "orders.tasks.retry_failed_orders",
-        "schedule": crontab(minute="*/5"),
-    }
-}
+# Celery - commented out temporarily to isolate issues
+# CELERY_BROKER_URL = "redis://127.0.0.1:6379/0"
+# CELERY_RESULT_BACKEND = "redis://127.0.0.1:6379/0"
+# CELERY_BEAT_SCHEDULE = {
+#     "retry_failed_orders": {
+#         "task": "orders.tasks.retry_failed_orders",
+#         "schedule": crontab(minute="*/5"),
+#     }
+# }
 
-# Sentry for error tracking
-# import sentry_sdk
-# sentry_sdk.init(
-#     dsn=os.getenv("SENTRY_DSN", ""),
-#     traces_sample_rate=1.0,
-#     send_default_pii=True,
-# )
-
-SESSION_ENGINE = "django.contrib.sessions.backends.cache"
+# Session configuration - use database sessions to avoid cache issues
+SESSION_ENGINE = "django.contrib.sessions.backends.db"
 SESSION_SAVE_EVERY_REQUEST = True
-SESSION_COOKIE_AGE = 1209600  # 2 weeks in seconds (optional)
-SESSION_CACHE_ALIAS = "default"
-
-CACHEOPS_REDIS = "redis://127.0.0.1:6379/2"
-
-CACHEOPS = {
-    '*.*': {'ops': 'all', 'timeout': 60*60}  # Cache all queries for 1 hour
-}
-
-
-
-
+SESSION_COOKIE_AGE = 1209600  # 2 weeks in seconds
 
 # Internationalization
-# https://docs.djangoproject.com/en/5.2/topics/i18n/
-
 LANGUAGE_CODE = "en-us"
-
 TIME_ZONE = "UTC"
-
 USE_I18N = True
-
 USE_TZ = True
 
-
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.2/howto/static-files/
-
-# settings.py
-# STATIC_URL = '/static/'
-# STATICFILES_DIRS = [
-#     BASE_DIR / "static",  # if your file is in a 'static' folder
-# ]
-# STATIC_ROOT = BASE_DIR / "staticfiles"  # for production
+# Static files
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 if not DEBUG:
-    STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+    STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
-STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+# Media files configuration
+AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
+AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
+AWS_STORAGE_BUCKET_NAME = os.getenv('AWS_STORAGE_BUCKET_NAME')
+AWS_S3_REGION_NAME = os.getenv('AWS_S3_REGION_NAME')
+
+# Only use AWS if credentials are provided
+if all([AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_STORAGE_BUCKET_NAME, AWS_S3_REGION_NAME]):
+    AWS_QUERYSTRING_AUTH = False
+    AWS_S3_OBJECT_PARAMETERS = {
+        'CacheControl': 'max-age=86400',
+    }
+    AWS_DEFAULT_ACL = 'public-read'
+    AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_S3_REGION_NAME}.amazonaws.com'
+    DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+    MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/'
+else:
+    # Fallback to local media storage
+    MEDIA_URL = '/media/'
+    MEDIA_ROOT = BASE_DIR / 'media'
 
 # Default primary key field type
-# https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
-
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
+# Password hashers
 PASSWORD_HASHERS = [
-    'django.contrib.auth.hashers.BCryptSHA256PasswordHasher',  # Strong bcrypt
+    'django.contrib.auth.hashers.BCryptSHA256PasswordHasher',
     'django.contrib.auth.hashers.BCryptPasswordHasher',
-    'django.contrib.auth.hashers.PBKDF2PasswordHasher',  # fallback
+    'django.contrib.auth.hashers.PBKDF2PasswordHasher',
     'django.contrib.auth.hashers.PBKDF2SHA1PasswordHasher',
 ]
 
+# Email Configuration - SIMPLIFIED to prevent 500 errors
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+ADMINS = []  # Empty to prevent email error reporting
 
-# Email Configuration for Domain Email
-# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# Logging Configuration - CRITICAL FIX to prevent recursion errors
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'WARNING',
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'django.request': {
+            'handlers': ['console'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+    },
+}
 
-# For cPanel/WHM or similar hosting
-# EMAIL_HOST = 'mail.yourdomain.com'  # or your server's SMTP host
-# EMAIL_PORT = 587  # Usually 587 for TLS, 465 for SSL, 25 for non-secure
-# EMAIL_USE_TLS = True  # Use True for port 587, False for port 465
-# EMAIL_USE_SSL = False  # Use True for port 465, False for port 587
-#
-# # Your domain email credentials
-# EMAIL_HOST_USER = 'noreply@yourdomain.com'  # Your domain email address
-# EMAIL_HOST_PASSWORD = 'your-email-password'  # Password for that email account
-#
-# # Email settings
-# DEFAULT_FROM_EMAIL = 'noreply@yourdomain.com'
-# SERVER_EMAIL = 'noreply@yourdomain.com'
-#
-# # Admin email for notifications
-# ADMIN_EMAIL = 'admin@yourdomain.com'
-
-# Optional: Use environment variables for security
-# import os
-# EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', 'noreply@yourdomain.com')
-# EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
-# ADMIN_EMAIL = os.getenv('ADMIN_EMAIL', 'admin@yourdomain.com')
-
-# Admin notifications
-ADMINS = [
-    ('Admin Name', 'admin@example.com'),
-]
-
+# PayFast settings
 PAYFAST_MERCHANT_ID = os.getenv("PAYFAST_MERCHANT_ID")
 PAYFAST_MERCHANT_KEY = os.getenv("PAYFAST_MERCHANT_KEY")
-
 PAYFAST_RETURN_URL = os.getenv("PAYFAST_RETURN_URL")
 PAYFAST_CANCEL_URL = os.getenv("PAYFAST_CANCEL_URL")
 PAYFAST_NOTIFY_URL = os.getenv("PAYFAST_NOTIFY_URL")
-
-
