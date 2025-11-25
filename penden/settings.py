@@ -67,9 +67,6 @@ CSRF_TRUSTED_ORIGINS = [
 ]
 #CORS_ALLOW_ALL_ORIGINS = True # for development only
 CORS_ALLOWED_ORIGINS = [
-    "https://api.penden.online",
-    "http://localhost:3000",  # React dev server
-    "http://127.0.0.1:3000",
     "https://frontend-pen-den.onrender.com",
     "https://penden.online",
 
