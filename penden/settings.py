@@ -176,16 +176,6 @@ CACHES = {
     }
 }
 
-# Celery - commented out temporarily to isolate issues
-# CELERY_BROKER_URL = "redis://127.0.0.1:6379/0"
-# CELERY_RESULT_BACKEND = "redis://127.0.0.1:6379/0"
-# CELERY_BEAT_SCHEDULE = {
-#     "retry_failed_orders": {
-#         "task": "orders.tasks.retry_failed_orders",
-#         "schedule": crontab(minute="*/5"),
-#     }
-# }
-
 # Session configuration - use database sessions to avoid cache issues
 SESSION_ENGINE = "django.contrib.sessions.backends.db"
 SESSION_SAVE_EVERY_REQUEST = True
@@ -204,14 +194,18 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 if not DEBUG:
     STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
-# AWS Configuration with proper error handling
+# AWS Configuration
 AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
 AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
 AWS_STORAGE_BUCKET_NAME = os.getenv('AWS_STORAGE_BUCKET_NAME')
 AWS_S3_REGION_NAME = os.getenv('AWS_S3_REGION_NAME')
 
-# Only configure AWS if all credentials are present
-if all([AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_STORAGE_BUCKET_NAME, AWS_S3_REGION_NAME]):
+# TEMPORARY: Force local storage until AWS permissions are fixed
+USE_LOCAL_STORAGE = True  # Set to False after fixing AWS IAM permissions
+
+# AWS Storage Configuration
+if all([AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_STORAGE_BUCKET_NAME,
+        AWS_S3_REGION_NAME]) and not USE_LOCAL_STORAGE:
     AWS_QUERYSTRING_AUTH = False
     AWS_S3_OBJECT_PARAMETERS = {
         'CacheControl': 'max-age=86400',
@@ -219,28 +213,12 @@ if all([AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_STORAGE_BUCKET_NAME, AWS_S
     AWS_DEFAULT_ACL = 'public-read'
     AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_S3_REGION_NAME}.amazonaws.com'
 
-    # Custom storage class to handle permission errors
-    from storages.backends.s3boto3 import S3Boto3Storage
-
-
-    class SafeS3Boto3Storage(S3Boto3Storage):
-        def delete(self, name):
-            try:
-                super().delete(name)
-                return True
-            except Exception as e:
-                # Log but don't raise exception
-                import logging
-                logger = logging.getLogger(__name__)
-                logger.error(f"S3 delete permission denied for {name}. Please update IAM policy.")
-                return False
-
-
-    DEFAULT_FILE_STORAGE = 'penden.settings.SafeS3Boto3Storage'
+    # Use the safe storage class
+    DEFAULT_FILE_STORAGE = 'penden.storage_backends.SafeS3Boto3Storage'
     MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/'
 
 else:
-    # Fallback to local storage
+    # Fallback to local storage - THIS WILL PREVENT THE 500 ERROR
     DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
     MEDIA_URL = '/media/'
     MEDIA_ROOT = BASE_DIR / 'media'
@@ -287,6 +265,17 @@ LOGGING = {
             'propagate': False,
         },
         'django.request': {
+            'handlers': ['console'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+        # Add specific logger for storages to catch S3 errors
+        'storages': {
+            'handlers': ['console'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+        'botocore': {
             'handlers': ['console'],
             'level': 'ERROR',
             'propagate': False,
