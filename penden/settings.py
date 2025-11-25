@@ -54,14 +54,25 @@ DEBUG = os.getenv("DEBUG", "False") == "True"
 # ALLOWED_HOSTS = os.environ.get("penden.onrender.com", "frontend-pen-den").split(",")  # e.g. myapp.onrender.com,frontend.onrender.com
 
 ALLOWED_HOSTS = [
+    "api.penden.online",
     'https://api.penden.online',
-    'https://penden.online',
-    'https://www.penden.online',
-    'penden.online',
     'penden-backend.onrender.com',
     'localhost',
     '127.0.0.1',
     '.onrender.com', # Wildcard for all Render subdomains]
+]
+CSRF_TRUSTED_ORIGINS = [
+    "https://api.penden.online",
+    "https://penden.online",
+]
+CORS_ALLOW_ALL_ORIGINS = True # for development only
+CORS_ALLOWED_ORIGINS = [
+    "https://api.penden.online",
+    "http://localhost:3000",  # React dev server
+    "http://127.0.0.1:3000",
+    "https://frontend-pen-den.onrender.com",
+    "https://penden.online",
+
 ]
 
 
@@ -208,22 +219,6 @@ AUTH_PASSWORD_VALIDATORS = [
         "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
 ]
-
-CORS_ALLOW_ALL_ORIGINS = True # for development only
-CORS_ALLOWED_ORIGINS = [
-    "https://api.penden.online",
-    "http://localhost:3000",  # React dev server
-    "http://127.0.0.1:3000",
-    "https://frontend-pen-den.onrender.com",
-    "https://penden.online",
-
-]
-CSRF_TRUSTED_ORIGINS = [
-    "https://api.penden.online",
-    "https://www.penden.online",
-]
-
-# "https://your-react-app.onrender.com",
 
 # Additional CORS settings
 CORS_ALLOW_CREDENTIALS = True
