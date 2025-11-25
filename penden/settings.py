@@ -50,22 +50,22 @@ SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 # DEBUG = True
 DEBUG = os.getenv("DEBUG", "False") == "True"
-
+ALLOWED_HOSTS = ['*', '.onrender.com']
 # ALLOWED_HOSTS = os.environ.get("penden.onrender.com", "frontend-pen-den").split(",")  # e.g. myapp.onrender.com,frontend.onrender.com
 
-ALLOWED_HOSTS = [
-    "api.penden.online",
-    'https://api.penden.online',
-    'penden-backend.onrender.com',
-    'localhost',
-    '127.0.0.1',
-    '.onrender.com', # Wildcard for all Render subdomains]
-]
+# ALLOWED_HOSTS = [
+#     "api.penden.online",
+#     'https://api.penden.online',
+#     'penden-backend.onrender.com',
+#     'localhost',
+#     '127.0.0.1',
+#     '.onrender.com', # Wildcard for all Render subdomains]
+# ]
 CSRF_TRUSTED_ORIGINS = [
     "https://api.penden.online",
     "https://penden.online",
 ]
-CORS_ALLOW_ALL_ORIGINS = True # for development only
+#CORS_ALLOW_ALL_ORIGINS = True # for development only
 CORS_ALLOWED_ORIGINS = [
     "https://api.penden.online",
     "http://localhost:3000",  # React dev server
@@ -120,9 +120,9 @@ REST_FRAMEWORK = {
 }
 
 MIDDLEWARE = [
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
-    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
