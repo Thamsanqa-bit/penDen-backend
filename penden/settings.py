@@ -219,6 +219,7 @@ AUTH_PASSWORD_VALIDATORS = [
         "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
 ]
+SECURE_SSL_REDIRECT = False
 
 # Additional CORS settings
 CORS_ALLOW_CREDENTIALS = True
