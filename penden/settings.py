@@ -184,28 +184,21 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Database configuration
+# Parse database configuration from DATABASE_URL
 DATABASES = {
     'default': dj_database_url.config(
         default=os.environ.get('DATABASE_URL'),
         conn_max_age=600,
         ssl_require=True,
-        # Add these SSL-specific options:
-        options={
-            'sslmode': 'require',
-            'sslrootcert': None,  # Let psycopg2 handle the root cert
-        }
     )
 }
 
-# Test database connection (remove this in production)
-try:
-    from django.db import connections
-    db_conn = connections['default']
-    c = db_conn.cursor()
-    print("Database connection successful!")
-except Exception as e:
-    print(f"Database connection error: {e}")
-    # Security settings for production
+# Force SSL connection
+if os.environ.get('DATABASE_URL'):
+    DATABASES['default']['OPTIONS'] = {
+        'sslmode': 'require',
+    }
+
 if not DEBUG:
     SECURE_SSL_REDIRECT = True
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
