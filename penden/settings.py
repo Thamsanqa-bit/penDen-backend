@@ -257,12 +257,12 @@ CELERY_BEAT_SCHEDULE = {
 }
 
 # Sentry for error tracking
-import sentry_sdk
-sentry_sdk.init(
-    dsn=os.getenv("SENTRY_DSN", ""),
-    traces_sample_rate=1.0,
-    send_default_pii=True,
-)
+# import sentry_sdk
+# sentry_sdk.init(
+#     dsn=os.getenv("SENTRY_DSN", ""),
+#     traces_sample_rate=1.0,
+#     send_default_pii=True,
+# )
 
 SESSION_ENGINE = "django.contrib.sessions.backends.cache"
 SESSION_SAVE_EVERY_REQUEST = True
