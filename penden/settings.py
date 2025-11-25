@@ -52,7 +52,14 @@ SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
 # DEBUG = os.getenv("DEBUG", "False") == "True"
 # ALLOWED_HOSTS = ['*', '.onrender.com']
 # ALLOWED_HOSTS = os.environ.get("penden.onrender.com", "frontend-pen-den").split(",")  # e.g. myapp.onrender.com,frontend.onrender.com
-
+DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
+ALLOWED_HOSTS = [
+    'api.penden.online',
+    '.onrender.com',
+    'localhost',
+    '127.0.0.1',
+    'penden.online',  # Add your main domain
+]
 CSRF_TRUSTED_ORIGINS = [
     "https://api.penden.online",
     "https://penden.online",
@@ -160,13 +167,6 @@ load_dotenv()
 #     }
 # }
 
-# Render PostgreSQL database URL (takes precedence)
-# if 'DATABASE_URL' in os.environ:
-#     DATABASES['default'] = dj_database_url.config(
-#         default=os.environ.get('DATABASE_URL'),
-#         conn_max_age=600,
-#         ssl_require=True
-#     )
 
 import os
 import dj_database_url
@@ -191,8 +191,8 @@ if DATABASES['default']:
     }
 
 # Other settings
-DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
-ALLOWED_HOSTS = ['api.penden.online', '.onrender.com', 'localhost', '127.0.0.1']
+# DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
+# ALLOWED_HOSTS = ['api.penden.online', '.onrender.com', 'localhost', '127.0.0.1']
 SECRET_KEY = os.environ.get('SECRET_KEY', 'your-secret-key-here')
 
 # Static files
@@ -342,24 +342,24 @@ PASSWORD_HASHERS = [
 
 
 # Email Configuration for Domain Email
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 
 # For cPanel/WHM or similar hosting
-EMAIL_HOST = 'mail.yourdomain.com'  # or your server's SMTP host
-EMAIL_PORT = 587  # Usually 587 for TLS, 465 for SSL, 25 for non-secure
-EMAIL_USE_TLS = True  # Use True for port 587, False for port 465
-EMAIL_USE_SSL = False  # Use True for port 465, False for port 587
-
-# Your domain email credentials
-EMAIL_HOST_USER = 'noreply@yourdomain.com'  # Your domain email address
-EMAIL_HOST_PASSWORD = 'your-email-password'  # Password for that email account
-
-# Email settings
-DEFAULT_FROM_EMAIL = 'noreply@yourdomain.com'
-SERVER_EMAIL = 'noreply@yourdomain.com'
-
-# Admin email for notifications
-ADMIN_EMAIL = 'admin@yourdomain.com'
+# EMAIL_HOST = 'mail.yourdomain.com'  # or your server's SMTP host
+# EMAIL_PORT = 587  # Usually 587 for TLS, 465 for SSL, 25 for non-secure
+# EMAIL_USE_TLS = True  # Use True for port 587, False for port 465
+# EMAIL_USE_SSL = False  # Use True for port 465, False for port 587
+#
+# # Your domain email credentials
+# EMAIL_HOST_USER = 'noreply@yourdomain.com'  # Your domain email address
+# EMAIL_HOST_PASSWORD = 'your-email-password'  # Password for that email account
+#
+# # Email settings
+# DEFAULT_FROM_EMAIL = 'noreply@yourdomain.com'
+# SERVER_EMAIL = 'noreply@yourdomain.com'
+#
+# # Admin email for notifications
+# ADMIN_EMAIL = 'admin@yourdomain.com'
 
 # Optional: Use environment variables for security
 # import os
