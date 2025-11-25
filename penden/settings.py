@@ -179,23 +179,30 @@ load_dotenv()
 #         ssl_require=True
 #     )
 
+import os
+import dj_database_url
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
+
+# Database configuration
 DATABASES = {
     'default': dj_database_url.config(
         default=os.environ.get('DATABASE_URL'),
         conn_max_age=600,
         ssl_require=True
-        )
+    )
 }
 
-# Add this to test database connection
+# Test database connection (remove this in production)
 try:
-    import django.db.utils
     from django.db import connections
     db_conn = connections['default']
     c = db_conn.cursor()
-except django.db.utils.OperationalError as e:
+    print("Database connection successful!")
+except Exception as e:
     print(f"Database connection error: {e}")
-
     # Security settings for production
 if not DEBUG:
     SECURE_SSL_REDIRECT = True
