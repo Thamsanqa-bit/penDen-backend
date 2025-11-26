@@ -6,7 +6,7 @@ from rest_framework import serializers
 #         model = Product
 #         fields = '__all__'
 class ProductSerializer(serializers.ModelSerializer):
-    image_url = serializers.SerializerMethodField()
+    image = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
@@ -15,7 +15,7 @@ class ProductSerializer(serializers.ModelSerializer):
     def get_image_url(self, obj):
         request = self.context.get('request')
         if obj.image:
-            return request.build_absolute_uri(obj.image.url)
+            return request.build_absolute_uri(obj.image)
         return None
 
 class ProductPDFSerializer(serializers.ModelSerializer):
