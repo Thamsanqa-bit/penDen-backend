@@ -10,13 +10,14 @@ class ProductSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Product
-        fields = ["id", "name", "price", "description", "category", "image_url"]
+        fields = ["id","category", "name", "price", "category", "image", "order_status"]
 
     def get_image_url(self, obj):
         request = self.context.get('request')
         if obj.image:
             return request.build_absolute_uri(obj.image.url)
         return None
+
 class ProductPDFSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProductListPDF
