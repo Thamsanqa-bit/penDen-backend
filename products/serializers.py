@@ -13,9 +13,8 @@ class ProductSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def get_image(self, obj):
-        request = self.context.get('request')
         if obj.image:
-            return request.build_absolute_uri(obj.image)
+            return obj.image.url  # This returns the full S3 URL
         return None
 
 class ProductPDFSerializer(serializers.ModelSerializer):
