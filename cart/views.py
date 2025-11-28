@@ -10,37 +10,75 @@ from django.views.decorators.cache import cache_page
 from rest_framework.pagination import PageNumberPagination
 
 # Create your views here.
+# @api_view(['GET'])
+# def get_cart(request):
+#     # Fetch cart and related data efficiently
+#     cart = (
+#         Cart.objects
+#         .filter(user=request.user.userprofile)
+#         .prefetch_related('items__product')
+#         .first()
+#     )
+#
+#     if not cart:
+#         return Response({'items': [], 'total_price': 0})
+#
+#     # Get all cart items
+#     items = cart.items.all().select_related('product')
+#
+#     # Apply pagination
+#     paginator = PageNumberPagination()
+#     paginator.page_size = 10
+#     paginated_items = paginator.paginate_queryset(items, request)
+#
+#     # Serialize paginated items
+#     serializer = CartItemSerializer(paginated_items, many=True)
+#
+#     # Return paginated response with total price
+#     total_price = sum(item.product.price * item.quantity for item in items)
+#
+#     return paginator.get_paginated_response({
+#         'items': serializer.data,
+#         'total_price': total_price
+#     })
+
 @api_view(['GET'])
 def get_cart(request):
-    # Fetch cart and related data efficiently
-    cart = (
-        Cart.objects
-        .filter(user=request.user.userprofile)
-        .prefetch_related('items__product')
-        .first()
-    )
+
+    # Ensure session exists (required for guest users)
+    if not request.session.session_key:
+        request.session.create()
+        request.session.save()
+
+    # Determine correct cart
+    if request.user.is_authenticated:
+        try:
+            user_profile = request.user.userprofile
+            cart = Cart.objects.filter(user=user_profile).first()
+        except:
+            return Response({'items': [], 'total_price': 0})
+    else:
+        cart = Cart.objects.filter(session_key=request.session.session_key).first()
 
     if not cart:
         return Response({'items': [], 'total_price': 0})
 
-    # Get all cart items
+    # Prefetch items
     items = cart.items.all().select_related('product')
 
-    # Apply pagination
     paginator = PageNumberPagination()
-    paginator.page_size = 10
+    paginator.page_size = 12
     paginated_items = paginator.paginate_queryset(items, request)
 
-    # Serialize paginated items
     serializer = CartItemSerializer(paginated_items, many=True)
 
-    # Return paginated response with total price
     total_price = sum(item.product.price * item.quantity for item in items)
 
     return paginator.get_paginated_response({
         'items': serializer.data,
         'total_price': total_price
     })
+
 
 @api_view(['POST'])
 def add_to_cart(request):
