@@ -10,6 +10,7 @@ from django.views.decorators.cache import cache_page
 from rest_framework.pagination import PageNumberPagination
 
 # Create your views here.
+@api_view(['GET'])
 def get_cart(request):
     # Fetch cart and related data efficiently
     cart = (
