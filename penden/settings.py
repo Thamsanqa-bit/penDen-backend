@@ -181,7 +181,7 @@ CACHES = {
 # Session configuration - use database sessions to avoid cache issues
 SESSION_ENGINE = "django.contrib.sessions.backends.db"
 SESSION_SAVE_EVERY_REQUEST = True
-SESSION_COOKIE_AGE = 1209600  # 2 weeks in seconds
+SESSION_COOKIE_AGE = 300
 
 # Internationalization
 LANGUAGE_CODE = "en-us"
