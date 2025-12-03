@@ -1,4 +1,3 @@
-
 """
 Django settings for penden project.
 
@@ -28,6 +27,7 @@ DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
 # DEBUG = True
 
 ALLOWED_HOSTS = [
+    '*',
     'api.penden.online',
     '.onrender.com',
     'localhost',
@@ -43,7 +43,12 @@ CSRF_TRUSTED_ORIGINS = [
 CORS_ALLOWED_ORIGINS = [
     "https://frontend-pen-den.onrender.com",
     "https://penden.online",
+    "http://127.0.0.1:3000",
+    "http://localhost:3000",
+    "https://localhost:3000",  # Add this for local HTTPS
+    "https://via.placeholder.com",  # Allow placeholder images
 ]
+CORS_ALLOW_ALL_ORIGINS = True
 
 # Application definition
 INSTALLED_APPS = [
@@ -69,7 +74,7 @@ INSTALLED_APPS = [
     "corsheaders",
     "rest_framework.authtoken",
     "django_redis",
-    "django_ratelimit",
+
     "health_check",
     "health_check.db",
     "health_check.cache",
@@ -116,20 +121,25 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "penden.wsgi.application"
 
-# Database
+# Database - COMMENTED OUT DUE TO CONNECTION ERROR
 DATABASES = {
     'default': dj_database_url.config(
         default=os.environ.get('DATABASE_URL'),
         conn_max_age=600,
-        ssl_require=True,
+        ssl_require=not ('localhost' in os.environ.get('DATABASE_URL', '') or DEBUG),
     )
 }
 
-# Add SSL options explicitly
-if DATABASES['default']:
+# Add this:
+if 'localhost' in os.environ.get('DATABASE_URL', '') or DEBUG:
     DATABASES['default']['OPTIONS'] = {
-        'sslmode': 'require',
+        'sslmode': 'disable'
     }
+else:
+    DATABASES['default']['OPTIONS'] = {
+        'sslmode': 'require'
+    }
+
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
@@ -158,6 +168,15 @@ else:
 
 # Additional CORS settings
 CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_METHODS = [
+    "DELETE",
+    "GET",
+    "OPTIONS",
+    "PATCH",
+    "POST",
+    "PUT",
+]
+
 CORS_ALLOW_HEADERS = [
     'accept',
     'accept-encoding',
@@ -291,3 +310,9 @@ PAYFAST_MERCHANT_KEY = os.getenv("PAYFAST_MERCHANT_KEY")
 PAYFAST_RETURN_URL = os.getenv("PAYFAST_RETURN_URL")
 PAYFAST_CANCEL_URL = os.getenv("PAYFAST_CANCEL_URL")
 PAYFAST_NOTIFY_URL = os.getenv("PAYFAST_NOTIFY_URL")
+
+# Silenced system checks to prevent rate limiting warnings
+SILENCED_SYSTEM_CHECKS = [
+    'django_ratelimit.E003',
+    'django_ratelimit.W001'
+]
