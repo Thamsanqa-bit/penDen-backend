@@ -35,11 +35,16 @@ def checkout(request):
     full_name = request.data.get("full_name")
     phone = request.data.get("phone")
     email = request.data.get("email")
-    address = request.data.get("address")
+    street = request.data.get("street")
+    city = request.data.get("city")
+    province = request.data.get("province")
+    postal_code = request.data.get("postal_code")
+    country = request.data.get("country")
+    # address = request.data.get("address")
     items_payload = request.data.get("items", [])
 
     # Validate
-    if not full_name or not phone or not email or not address:
+    if not full_name or not phone or not email or not street:
         return Response({"error": "All customer fields are required."},
                         status=status.HTTP_400_BAD_REQUEST)
 
@@ -80,7 +85,11 @@ def checkout(request):
         full_name=full_name,
         phone=phone,
         email=email,
-        address=address,
+        street=street,
+        city=city,
+        province=province,
+        postal_code=postal_code,
+        country=country,
         total_amount=total_amount,
         status="pending"
     )
