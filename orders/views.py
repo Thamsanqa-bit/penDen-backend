@@ -21,7 +21,8 @@ def checkout(request):
     }
     """
 
-    session_id = request.session.session_key or request.session.save()
+    # session_id = request.session.session_key or request.session.save()
+    session_key = request.session.session_key
 
     # Detect user
     user_profile = None
@@ -83,7 +84,7 @@ def checkout(request):
     # Create the order
     order = Order.objects.create(
         user=user_profile,
-        session_id=session_id if not user_profile else None,
+        session_key=session_key if not user_profile else None,
         full_name=full_name,
         phone=phone,
         email=email,
@@ -109,7 +110,7 @@ def checkout(request):
     # Clear user or guest cart
     if user_profile:
         Cart.objects.filter(user=user_profile).delete()
-    Cart.objects.filter(session_id=session_id).delete()
+    Cart.objects.filter(session_key=session_key).delete()
 
     serializer = OrderSerializer(order)
     return Response(serializer.data, status=status.HTTP_201_CREATED)
