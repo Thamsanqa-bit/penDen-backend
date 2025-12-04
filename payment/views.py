@@ -3,6 +3,7 @@ from rest_framework.decorators import api_view
 from urllib.parse import urlencode
 from django.http import JsonResponse
 from django.conf import settings
+from orders.models import Order
 
 from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse
@@ -16,45 +17,36 @@ import json
 @csrf_exempt
 @api_view(["POST"])
 def create_payment(request):
+    # Simple test version
     try:
-        # Parse JSON data from POST request
-        if isinstance(request.data, str):
-            data = json.loads(request.data)
-        else:
-            data = request.data
+        print("=== DEBUG: create_payment called ===")
 
-        order_id = data.get("order_id")
+        # Check request data
+        print(f"Request data: {request.data}")
 
-        if not order_id:
-            return Response({"error": "Order ID is required"}, status=400)
+        # Test with hardcoded values to isolate the issue
+        test_data = {
+            "merchant_id": "19466755",
+            "merchant_key": "bbn1mlrvljzu1",
+            "amount": "100.00",
+            "item_name": "Test Order Payment",
+            "return_url": "https://penden.online/payment/success",
+            "cancel_url": "https://penden.online/payment/cancel",
+            "notify_url": "https://penden.online/api/payment/notify/",
+        }
 
-        try:
-            order = Order.objects.get(id=order_id)
+        payment_url = "https://www.payfast.co.za/eng/process?" + urlencode(test_data)
+        print(f"Generated URL: {payment_url}")
 
-            # Validate amount
-            if order.total_amount is None or order.total_amount <= 0:
-                return Response({"error": "Invalid order amount"}, status=400)
-
-            # Format amount to 2 decimal places
-            amount = "{:.2f}".format(order.total_amount)
-
-            payfast_data = {
-                "merchant_id": settings.PAYFAST_MERCHANT_ID,
-                "merchant_key": settings.PAYFAST_MERCHANT_KEY,
-                "amount": amount,
-                "item_name": f"Order #{order.id} Payment",
-                "return_url": settings.PAYFAST_RETURN_URL,
-                "cancel_url": settings.PAYFAST_CANCEL_URL,
-                "notify_url": settings.PAYFAST_NOTIFY_URL,
-            }
-
-            payment_url = "https://www.payfast.co.za/eng/process?" + urlencode(payfast_data)
-            return Response({"payment_url": payment_url})
-
-        except Order.DoesNotExist:
-            return Response({"error": "Order not found"}, status=404)
+        return Response({
+            "payment_url": payment_url,
+            "debug": "Test mode - using hardcoded values"
+        })
 
     except Exception as e:
+        print(f"=== ERROR: {str(e)} ===")
+        import traceback
+        traceback.print_exc()
         return Response({"error": str(e)}, status=500)
 #
 # @csrf_exempt
