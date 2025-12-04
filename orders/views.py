@@ -21,7 +21,6 @@ def checkout(request):
     }
     """
 
-    # session_id = request.session.session_key or request.session.save()
     session_key = request.session.session_key
 
     # Detect user
@@ -41,10 +40,8 @@ def checkout(request):
     province = request.data.get("province")
     postal_code = request.data.get("postal_code")
     country = request.data.get("country")
-    # address = request.data.get("address")
     items_payload = request.data.get("items", [])
-    print("Itmes: ",items_payload)
-
+    print("Items: ", items_payload)
 
     # Validate
     if not full_name or not phone or not email or not street:
@@ -81,10 +78,10 @@ def checkout(request):
         return Response({"error": "No valid items."},
                         status=status.HTTP_400_BAD_REQUEST)
 
-    # Create the order
+    # Create the order - FIXED: Use session_id instead of session_key
     order = Order.objects.create(
         user=user_profile,
-        session_key=session_key if not user_profile else None,
+        session_id=session_key if not user_profile else None,  # CHANGED HERE
         full_name=full_name,
         phone=phone,
         email=email,
@@ -110,12 +107,10 @@ def checkout(request):
     # Clear user or guest cart
     if user_profile:
         Cart.objects.filter(user=user_profile).delete()
-    Cart.objects.filter(session_key=session_key).delete()
+    Cart.objects.filter(session_key=session_key).delete()  # This stays as session_key for Cart model
 
     serializer = OrderSerializer(order)
     return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-
 # @api_view(["POST"])
 # def checkout(request):
 #     """
