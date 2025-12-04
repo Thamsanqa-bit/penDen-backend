@@ -7,7 +7,7 @@ from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse
 
-@api_view(["POST"])
+
 def create_payment(request):
     amount = request.GET.get("amount")
 
