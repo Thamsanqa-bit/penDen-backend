@@ -5,11 +5,11 @@ from rest_framework import status
 from .models import Order, OrderItem
 from products.models import Product
 from .serializers import OrderSerializer
-from cart.models import Cart
+from cart.models import Cart, UserProfile
 from django.views.decorators.cache import cache_page
 
 @api_view(["POST"])
-@permission_classes([IsAuthenticated])
+# @permission_classes([IsAuthenticated])
 def checkout(request):
     try:
         user_profile = request.user.userprofile

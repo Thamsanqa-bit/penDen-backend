@@ -27,28 +27,32 @@ DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
 # DEBUG = True
 
 ALLOWED_HOSTS = [
-    '*',
     'api.penden.online',
     '.onrender.com',
     'localhost',
     '127.0.0.1',
     'penden.online',
 ]
+CORS_ALLOW_CREDENTIALS = True
 
 CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
     "https://api.penden.online",
     "https://penden.online",
 ]
 
 CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
     "https://frontend-pen-den.onrender.com",
     "https://penden.online",
-    "http://127.0.0.1:3000",
-    "http://localhost:3000",
-    "https://localhost:3000",  # Add this for local HTTPS
-    "https://via.placeholder.com",  # Allow placeholder images
+    "https://via.placeholder.com",
 ]
-CORS_ALLOW_ALL_ORIGINS = True
 
 # Application definition
 INSTALLED_APPS = [
@@ -91,9 +95,9 @@ REST_FRAMEWORK = {
 }
 
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
-    "corsheaders.middleware.CorsMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -167,7 +171,6 @@ else:
     SECURE_SSL_REDIRECT = False
 
 # Additional CORS settings
-CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_METHODS = [
     "DELETE",
     "GET",
