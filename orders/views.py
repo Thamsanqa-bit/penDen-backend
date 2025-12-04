@@ -42,6 +42,8 @@ def checkout(request):
     country = request.data.get("country")
     # address = request.data.get("address")
     items_payload = request.data.get("items", [])
+    print("Itmes: ",items_payload)
+
 
     # Validate
     if not full_name or not phone or not email or not street:
