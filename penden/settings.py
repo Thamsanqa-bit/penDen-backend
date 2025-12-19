@@ -42,15 +42,14 @@ CSRF_TRUSTED_ORIGINS = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
     "https://penden-backend.onrender.com",
+    "https://penden-frontend.onrender.com",
 
 ]
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
-    "https://frontend-pen-den.onrender.com",
+    "https://penden-frontend.onrender.com"
     # "https://penden.online",
     "https://via.placeholder.com",
 ]
@@ -96,9 +95,6 @@ REST_FRAMEWORK = {
 }
 
 MIDDLEWARE = [
-    # Add this custom middleware first
-    'penden.middleware.ForceHttpInDevelopmentMiddleware',
-
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
