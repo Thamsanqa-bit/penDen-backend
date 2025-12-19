@@ -15,6 +15,7 @@ import os
 import dj_database_url
 from dotenv import load_dotenv
 
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -27,11 +28,11 @@ DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
 # DEBUG = True
 
 ALLOWED_HOSTS = [
-    'api.penden.online',
+    'https://penden-backend.onrender.com',
     '.onrender.com',
     'localhost',
     '127.0.0.1',
-    'penden.online',
+
 ]
 CORS_ALLOW_CREDENTIALS = True
 
@@ -40,8 +41,8 @@ CSRF_TRUSTED_ORIGINS = [
     "http://127.0.0.1:3000",
     "http://localhost:5173",
     "http://127.0.0.1:5173",
-    "https://api.penden.online",
-    "https://penden.online",
+    "https://penden-backend.onrender.com",
+
 ]
 
 CORS_ALLOWED_ORIGINS = [
@@ -50,7 +51,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
     "https://frontend-pen-den.onrender.com",
-    "https://penden.online",
+    # "https://penden.online",
     "https://via.placeholder.com",
 ]
 
@@ -95,6 +96,9 @@ REST_FRAMEWORK = {
 }
 
 MIDDLEWARE = [
+    # Add this custom middleware first
+    'penden.middleware.ForceHttpInDevelopmentMiddleware',
+
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
