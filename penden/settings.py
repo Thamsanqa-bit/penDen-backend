@@ -29,6 +29,7 @@ DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
 
 ALLOWED_HOSTS = [
     'https://penden.store',
+    'api.penden.store',
     'https://penden-backend.onrender.com',
     '.onrender.com',
     'localhost',
@@ -39,6 +40,7 @@ CORS_ALLOW_CREDENTIALS = True
 
 CSRF_TRUSTED_ORIGINS = [
     "https://penden.store",
+    "https://api.penden.store",
     "http://localhost:3000",
     "http://127.0.0.1:3000",
     "https://penden-backend.onrender.com",
@@ -48,6 +50,7 @@ CSRF_TRUSTED_ORIGINS = [
 
 CORS_ALLOWED_ORIGINS = [
     "https://penden.store",
+    "https://api.penden.store",
     "http://localhost:3000",
     "http://127.0.0.1:3000",
     "https://penden-frontend.onrender.com"
