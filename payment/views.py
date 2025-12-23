@@ -47,9 +47,9 @@ def create_payment(request):
         data = {
             "merchant_id": "19466755",
             "merchant_key": "bbn1mlrvljzu1",
-            "return_url": "https://penden.online/payment/success",
-            "cancel_url": "https://penden.online/payment/cancel",
-            "notify_url": "https://penden.online/api/payment/notify/",
+            "return_url": "https://penden.store/payment/success",
+            "cancel_url": "https://penden.store/payment/cancel",
+            "notify_url": "https://penden.store/api/payment/notify/",
             "amount": amount_str,
             "item_name": f"Order #{order_id}",
         }
