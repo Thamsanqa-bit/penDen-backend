@@ -13,4 +13,4 @@ services:
       - key: DEBUG
         value: False
       - key: ALLOWED_HOSTS
-        value: penden.online,render.com
+        value: penden.store,render.com

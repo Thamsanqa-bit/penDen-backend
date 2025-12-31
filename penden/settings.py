@@ -28,43 +28,31 @@ DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
 # DEBUG = True
 
 # In settings.py
+# For production
 ALLOWED_HOSTS = [
+    'api.penden.store',
     'penden.store',
     'www.penden.store',
-    'api.penden.store',
-    'penden.online',  # ADD THIS
-    'www.penden.online',  # ADD THIS
-    'api.penden.online',  # ADD THIS
-    'penden-backend.onrender.com',
+    'api.penden.online',  # Keep temporarily for migration
+    'penden.online',
     'localhost',
     '127.0.0.1',
-    '.onrender.com',
 ]
 
 CSRF_TRUSTED_ORIGINS = [
     "https://penden.store",
     "https://www.penden.store",
     "https://api.penden.store",
-    "https://penden.online",  # ADD THIS
-    "https://www.penden.online",  # ADD THIS
-    "https://api.penden.online",  # ADD THIS
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-    "https://penden-backend.onrender.com",
-    "https://penden-frontend.onrender.com",
 ]
 
 CORS_ALLOWED_ORIGINS = [
     "https://penden.store",
     "https://www.penden.store",
     "https://api.penden.store",
-    "https://penden.online",  # ADD THIS
-    "https://www.penden.online",  # ADD THIS
-    "https://api.penden.online",  # ADD THIS
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-    "https://penden-frontend.onrender.com",
+    "http://localhost:3000",  # For local development
 ]
+
+CORS_ALLOW_ALL_ORIGINS = True
 
 CORS_ALLOW_CREDENTIALS = True
 
