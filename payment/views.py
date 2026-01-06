@@ -8,8 +8,6 @@ from orders.models import Order
 import os
 from django.conf import settings
 
-@api_view(['GET'])
-
 @csrf_exempt
 @api_view(["POST"])
 def create_payment(request):
@@ -18,7 +16,7 @@ def create_payment(request):
         print("Request data:", request.data)
 
         order_id = request.data.get("order_id")
-        amount = request.data.get("amount")  # amount from frontend
+        amount = request.data.get("amount")
 
         if not order_id or not amount:
             return Response(
@@ -35,28 +33,25 @@ def create_payment(request):
         # Convert amount safely
         try:
             amount = float(amount)
-        except:
+        except ValueError:
             return Response({"error": "Invalid amount format"}, status=400)
 
-        # Format to 2 decimals for PayFast
+        # Format to 2 decimals
         amount_str = f"{amount:.2f}"
-
         print(f"Valid amount received: {amount_str}")
 
-        # PayFast required fields
+        # PayFast data from .env
         data = {
-            "merchant_id": "19466755",
-            "merchant_key": "bbn1mlrvljzu1",
-            "return_url": "https://penden.store/payment/success",
-            "cancel_url": "https://penden.store/payment/cancel",
-            "notify_url": "https://penden.store/api/payment/notify/",
+            "merchant_id": config("PAYFAST_MERCHANT_ID"),
+            "merchant_key": config("PAYFAST_MERCHANT_KEY"),
+            "return_url": config("PAYFAST_RETURN_URL"),
+            "cancel_url": config("PAYFAST_CANCEL_URL"),
+            "notify_url": config("PAYFAST_NOTIFY_URL"),
             "amount": amount_str,
             "item_name": f"Order #{order_id}",
         }
 
-        # Generate PayFast process URL
         payment_url = "https://www.payfast.co.za/eng/process?" + urlencode(data)
-
         print("Generated PayFast URL:", payment_url)
 
         return Response({"payment_url": payment_url})
@@ -64,6 +59,60 @@ def create_payment(request):
     except Exception as e:
         print("=== ERROR in create_payment ===", str(e))
         return Response({"error": str(e)}, status=500)
+# @csrf_exempt
+# @api_view(["POST"])
+# def create_payment(request):
+#     try:
+#         print("=== DEBUG: create_payment called ===")
+#         print("Request data:", request.data)
+#
+#         order_id = request.data.get("order_id")
+#         amount = request.data.get("amount")  # amount from frontend
+#
+#         if not order_id or not amount:
+#             return Response(
+#                 {"error": "order_id and amount are required"},
+#                 status=status.HTTP_400_BAD_REQUEST
+#             )
+#
+#         # Validate order exists
+#         try:
+#             order = Order.objects.get(id=order_id)
+#         except Order.DoesNotExist:
+#             return Response({"error": "Order not found"}, status=404)
+#
+#         # Convert amount safely
+#         try:
+#             amount = float(amount)
+#         except:
+#             return Response({"error": "Invalid amount format"}, status=400)
+#
+#         # Format to 2 decimals for PayFast
+#         amount_str = f"{amount:.2f}"
+#
+#         print(f"Valid amount received: {amount_str}")
+#
+#         # PayFast required fields
+#         data = {
+#             "merchant_id": "19466755",
+#             "merchant_key": "bbn1mlrvljzu1",
+#             "return_url": "https://penden.store/payment/success",
+#             "cancel_url": "https://penden.store/payment/cancel",
+#             "notify_url": "https://penden.store/api/payment/notify/",
+#             "amount": amount_str,
+#             "item_name": f"Order #{order_id}",
+#         }
+#
+#         # Generate PayFast process URL
+#         payment_url = "https://www.payfast.co.za/eng/process?" + urlencode(data)
+#
+#         print("Generated PayFast URL:", payment_url)
+#
+#         return Response({"payment_url": payment_url})
+#
+#     except Exception as e:
+#         print("=== ERROR in create_payment ===", str(e))
+#         return Response({"error": str(e)}, status=500)
 
 
 
