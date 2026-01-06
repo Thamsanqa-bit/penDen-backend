@@ -26,14 +26,11 @@ SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "fallback-secret-key-for-development
 
 DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
 # DEBUG = True
-
-# In settings.py
 # For production
 ALLOWED_HOSTS = [
     'api.penden.store',
     'penden.store',
     'www.penden.store',
-    'api.penden.online',  # Keep temporarily for migration
     'penden.online',
     'localhost',
     '127.0.0.1',

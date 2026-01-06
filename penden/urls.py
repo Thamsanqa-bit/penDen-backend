@@ -23,10 +23,10 @@ from django.conf.urls.static import static
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("", include("products.urls")),
-    path("", include("accounts.urls")),
-    path("", include("cart.urls")),
-    path("", include("orders.urls")),
-    path("", include("payment.urls")),
+    path("api/", include("products.urls")),
+    path("api/", include("accounts.urls")),
+    path("api/", include("cart.urls")),
+    path("api/", include("orders.urls")),
+    path("api/", include("payment.urls")),
     path("health", include("health_check.urls")),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
