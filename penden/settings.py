@@ -28,6 +28,7 @@ DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
 # DEBUG = True
 # For production
 ALLOWED_HOSTS = [
+    'penden-backend.onrender.com',
     'api.penden.store',
     'penden.store',
     'www.penden.store',
