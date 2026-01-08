@@ -6,6 +6,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from urllib.parse import urlencode
 from orders.models import Order
+from django.core.mail import EmailMessage
 import os
 from django.conf import settings
 
@@ -118,12 +119,59 @@ def create_payment(request):
 
 
 @csrf_exempt
+@api_view(["POST"])
 def payfast_notify(request):
-    # PayFast sends POST with payment details
-    data = request.POST
+    try:
+        print("=== PayFast NOTIFY Called ===")
+        print(request.POST)
 
-    # You would verify hash + save transaction
-    print("PayFast payment received:", data)
+        payment_status = request.POST.get("payment_status")
+        order_id = request.POST.get("m_payment_id")  # Or your matching field
+        amount = request.POST.get("amount_gross")
 
-    return HttpResponse("OK", status=200)
+        if payment_status != "COMPLETE":
+            return Response({"status": "Payment not completed"}, status=200)
+
+        # Fetch order
+        try:
+            order = Order.objects.get(id=order_id)
+        except Order.DoesNotExist:
+            return Response({"error": "Order not found"}, status=404)
+
+        user_email = order.email  # The email they used when ordering
+
+        # === Send thank-you email to user ===
+        user_email_msg = EmailMessage(
+            subject="Payment Received - Thank You!",
+            body=f"Hi, thank you! We have received your payment for Order #{order_id}. "
+                 f"Our team will contact you soon.",
+            from_email="no-reply@penden.co.za",
+            to=[user_email],
+        )
+        user_email_msg.send(fail_silently=False)
+
+        # === Send notification to restaurant / admin ===
+        admin_email_msg = EmailMessage(
+            subject=f"New Paid Order #{order_id}",
+            body=f"A new order has been paid.\n\nOrder ID: {order_id}\nAmount: {amount}",
+            from_email="no-reply@penden.co.za",
+            to=["orders@penden.co.za"],
+        )
+        admin_email_msg.send(fail_silently=False)
+
+        print("Emails sent successfully.")
+        return Response({"status": "OK"}, status=200)
+
+    except Exception as e:
+        print("=== ERROR in PayFast Notify ===", str(e))
+        return Response({"error": str(e)}, status=500)
+
+# def payfast_notify(request):
+#     # PayFast sends POST with payment details
+#     data = request.POST
+#
+#     # You would verify hash + save transaction
+#     print("PayFast payment received:", data)
+#
+#     return HttpResponse("OK", status=200)
 
